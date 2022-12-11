@@ -1,0 +1,17 @@
+{
+    "name"   : "nftmintstats",
+    "author" : "868system",
+
+    "description" : "Retrieves, parses, and computes NFT collections' original mint value and related statistics",
+    "keywords"    : ["crypto", "ethereum", "nft"],
+
+    "license" : "MIT",
+    "version" : "0.0.1",
+
+    "type" : "module",
+    "main" : "app.js",
+
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    }
+}
