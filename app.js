@@ -28,7 +28,7 @@ const ethPrices = ethPricesRows.reduce((obj, row) => {
 
     const dateYMD = rowItems[0].split('-');
     const year = dateYMD[0];
-    const month = dateYMD[1];
+    const month = dateYMD[1] - 1; // January is 0
     const day = dateYMD[2];
 
     const date = new Date(year, month, day);
@@ -64,54 +64,60 @@ const process = (allTransactions) => {
     // Discard info we won't use, especially non-static fields like 'confirmations'
     const mintTransactions = mintTransactionsSuccessful.map(x => {
 
-        const timeStamp = new Date(parseInt(x['timeStamp']) * 1000);
-        const priceETHUSD = getEthPrice(timeStamp);
+        const isoDate = new Date(parseInt(x['timeStamp']) * 1000);
+        const priceETHUSD = getEthPrice(isoDate);
         const valueETH = x['value'] / 1000000000000000000.0;
         const valueUSD = valueETH * priceETHUSD;
         const input = x['input'];
         const methodId = x['methodId'];
-        const functionName = project.mintFunctions[x['methodId']];
+        const functionInfo = project.mintFunctions[methodId];
         const numberMinted = project.getNumberMinted(methodId, input);
 
         const result = {
+            // 1:1 copy of downloaded stats
             'blockNumber'       : x['blockNumber'],
-            'timeStamp'         : timeStamp,
+            'timeStamp'         : x['timeStamp'],
             'hash'              : x['hash'],
             'nonce'             : x['nonce'],
             'blockHash'         : x['blockHash'],
             'transactionIndex'  : x['transactionIndex'],
             'from'              : x['from'],
             'to'                : x['to'],
-            'priceETHUSD'       : priceETHUSD,
-            'valueETH'          : valueETH,
-            'valueUSD'          : valueUSD,
+            'value'             : x['value'],
             'gas'               : x['gas'],
             'gasPrice'          : x['gasPrice'],
             'isError'           : x['isError'],
             'txreceipt_status'  : x['txreceipt_status'],
-            'input'             : input,
+            'input'             : x['input'],
             'contractAddress'   : x['contractAddress'],
             'cumulativeGasUsed' : x['cumulativeGasUsed'],
             'gasUsed'           : x['gasUsed'],
-            //'confirmations'     : x['confirmations'],
-            'methodId'          : methodId,
-            'functionName'      : functionName,
-            'numberMinted'      : numberMinted
+            'confirmations'     : x['confirmations'],
+            'methodId'          : x['methodId'],
+            'functionName'      : x['functionName'],
+            // derived stats
+            '_functionInfo'     : functionInfo,
+            '_isoDate'          : isoDate,
+            '_numberMinted'     : numberMinted,
+            '_valueETH'         : valueETH,
+            '_valueUSD'         : valueUSD,
+            '_priceETHUSD'      : priceETHUSD
         }
+
         return result;
     });
 
-    const itemsTotal = mintTransactions.reduce((acc, tx) => parseInt(acc) + parseInt(tx['numberMinted']), 0);
+    const itemsTotal = mintTransactions.reduce((acc, tx) => parseInt(acc) + parseInt(tx['_numberMinted']), 0);
     const items = Object.keys(project.mintFunctions).map( methodId =>
-        mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseInt(acc) + parseInt(tx['numberMinted']) : parseInt(acc), 0) );
+        mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseInt(acc) + parseInt(tx['_numberMinted']) : parseInt(acc), 0) );
 
     const costsETH = Object.keys(project.mintFunctions).map( methodId =>
-        Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['valueETH']) : parseFloat(acc), 0.0) * 100.0) / 100.0);
+        Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['_valueETH']) : parseFloat(acc), 0.0) * 100.0) / 100.0);
     const costsUSD = Object.keys(project.mintFunctions).map( methodId =>
-        Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['valueUSD']) : parseFloat(acc), 0.0) * 100.0) / 100.0);
+        Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['_valueUSD']) : parseFloat(acc), 0.0) * 100.0) / 100.0);
 
-    const costTotalETH  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['valueETH']), 0.0) * 100.0) / 100.0;
-    const costTotalUSD  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['valueUSD']), 0.0) * 100.0) / 100.0;
+    const costTotalETH  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['_valueETH']), 0.0) * 100.0) / 100.0;
+    const costTotalUSD  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['_valueUSD']), 0.0) * 100.0) / 100.0;
 
 
     // TODO: Maybe this console output section can be relocated
@@ -194,7 +200,7 @@ const download = (url, currentBlock, currentData) => {
 
 }
 
-
+console.log('');
 
 // Download Etherscan data
 const urlPrefix = 'https://api.etherscan.io/api?module=account&action=txlist&address=' + project.contractAddress + '&startblock=';
