@@ -44,7 +44,7 @@ const projectDefs = {
 
         mintFunctions: {
             '0xc15e24bc': ['mintMutants'        , 'Mint Mutants'],
-            '0xe73a9a25': ['mutateApeWithSerum' , 'Mutate Ape with Serum'],
+            '0xe73a9a25': ['mutateApeWithSerum' , 'Mutate Ape With Serum'],
         },
 
         getNumberMinted: (methodId, input) => {
