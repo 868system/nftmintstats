@@ -163,45 +163,49 @@ const process = (allTransactions) => {
     writeFile('data/' + projectName + '_parsed.json', JSON.stringify(mintTransactions), showError);
 }
 
-const download = (url, currentBlock, currentData) => {
+const urls = {
+    'transfers'    : 'https://api.etherscan.io/api?module=account&action=tokennfttx&address=0x0000000000000000000000000000000000000000&contractaddress=' + project.contractAddress + '&startblock=',
+    'transactions' : 'https://api.etherscan.io/api?module=account&action=txlist&address=' + project.contractAddress + '&startblock='
+}
+const download = async (dataSet, url, currentContent, currentBlock, callback) => {
+
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     get(url + currentBlock, (response) => {
         const chunks = [];
         response
+            .on('data', (chunk) => chunks.push(chunk))
+            .on('end', () => {
 
-            .on('data', (chunk) => {
-                chunks.push(chunk);
-            })
+                const content_raw = JSON.parse(chunks.join(''));
+                const content = content_raw['result'];
+                const updatedContent = currentContent.concat(content);
 
-            .on('end', async () => {
-                const content = JSON.parse(chunks.join(''));
-                const transactions = content['result'];
-                const itemCount = transactions.length;
-
-                const updatedData = currentData.concat(transactions);
-
-                const blocks = transactions.map(x => x['blockNumber']);
+                const blocks = content.map(x => x['blockNumber']);
                 const maxBlock = Math.max(...blocks);
 
-                await new Promise(resolve => setTimeout(resolve, 5000));
+                console.log(updatedContent.length + ' records retrieved');
 
-                console.log(updatedData.length + ' transactions retrieved');
-
-                if (itemCount >= 10000) {
-                    download(url, maxBlock, updatedData);
+                if (content.length >= 10000) {
+                    download(dataSet, url, updatedContent, maxBlock, callback);
                 }
                 else {
-                    process(updatedData);
+                    const updatedDataSet = dataSet.concat([updatedContent])
+                    callback(updatedDataSet);
                 }
 
             });
-
     });
-
 }
+const finishDownload = (dataSet) => {
 
-console.log('');
+    if (dataSet.length == 2) {
+        process(dataSet[1]);
+    }
+    else {
+        download(dataSet, urls['transactions'], [], 0, finishDownload);
+    }
+};
 
-// Download Etherscan data
-const urlPrefix = 'https://api.etherscan.io/api?module=account&action=txlist&address=' + project.contractAddress + '&startblock=';
-download(urlPrefix, 0, []);
+
+download([], urls['transfers'], [], 0, finishDownload);
