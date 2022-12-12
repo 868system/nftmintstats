@@ -167,45 +167,56 @@ const urls = {
     'transfers'    : 'https://api.etherscan.io/api?module=account&action=tokennfttx&address=0x0000000000000000000000000000000000000000&contractaddress=' + project.contractAddress + '&startblock=',
     'transactions' : 'https://api.etherscan.io/api?module=account&action=txlist&address=' + project.contractAddress + '&startblock='
 }
-const download = async (dataSet, url, currentContent, currentBlock, callback) => {
 
-    await new Promise(resolve => setTimeout(resolve, 5000));
 
-    get(url + currentBlock, (response) => {
-        const chunks = [];
-        response
-            .on('data', (chunk) => chunks.push(chunk))
-            .on('end', () => {
+const download = async (urls, _dataSets, _currentDataSetKey, _currentContent) => {
 
-                const content_raw = JSON.parse(chunks.join(''));
-                const content = content_raw['result'];
-                const updatedContent = currentContent.concat(content);
+    const currentContent = _currentContent !== undefined ? _currentContent : [];
 
-                const blocks = content.map(x => x['blockNumber']);
-                const maxBlock = Math.max(...blocks);
+    const dataSets = _dataSets !== undefined ? _dataSets : {};
 
-                console.log(updatedContent.length + ' records retrieved');
+    const currentBlock = currentContent.length == 0 ? 0 :
+                         Math.max(...currentContent.map(x => x['blockNumber']));
 
-                if (content.length >= 10000) {
-                    download(dataSet, url, updatedContent, maxBlock, callback);
-                }
-                else {
-                    const updatedDataSet = dataSet.concat([updatedContent])
-                    callback(updatedDataSet);
-                }
+    const dataSetKey = _currentDataSetKey !== undefined ? _currentDataSetKey :
+                       Object.keys(urls).find(x => !Object.keys(dataSets).includes(x));
 
-            });
-    });
-}
-const finishDownload = (dataSet) => {
-
-    if (dataSet.length == 2) {
-        process(dataSet[1]);
+    // If all URLs have been retrieved, dataSets will have
+    // the same keys as urls, and dataSetKey will be undefined
+    if (dataSetKey === undefined) {
+        // Proceed to process the datasets
+        process(dataSets['transactions']);
     }
     else {
-        download(dataSet, urls['transactions'], [], 0, finishDownload);
+        const url = urls[dataSetKey];
+
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        get(url + currentBlock, (response) => {
+            const chunks = [];
+            response
+                .on('data', (chunk) => chunks.push(chunk))
+                .on('end', () => {
+
+                    const content = JSON.parse(chunks.join(''))['result'];
+                    const updatedContent = currentContent.concat(content);
+
+                    console.log(updatedContent.length + ' records retrieved from \'' + dataSetKey+ '\'' );
+
+                    if (content.length >= 10000) {
+                        download(urls, dataSets, dataSetKey, updatedContent);
+                    }
+                    else {
+                        const updatedDataSet = {...dataSets, [dataSetKey]: updatedContent};
+                        download(urls, updatedDataSet);
+                    }
+
+                });
+        });
     }
-};
+}
 
-
-download([], urls['transfers'], [], 0, finishDownload);
+const start = () => {
+    download(urls);
+}
+start();
