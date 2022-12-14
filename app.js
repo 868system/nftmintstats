@@ -111,81 +111,181 @@ const process = (allTransfers, allTransactions) => {
 
     });
 
+    const uniqueMintTransactions = tokenMints.map((tokenMint, tokenMintIdx) => [tokenMintIdx, tokenMint['hash']]).filter((x, i, a) => a.findIndex(y => y[1] == x[1]) == i);
 
+    console.log(uniqueMintTransactions.length + ' unique mint transactions');
 
+    const mintTransactions = uniqueMintTransactions.map(tx => {
 
+        // common
+        const blockNumber       = tokenMints[tx[0]]['blockNumber'];
+        const timeStamp         = tokenMints[tx[0]]['timeStamp'];
+        const hash              = tokenMints[tx[0]]['hash'];
+        const nonce             = tokenMints[tx[0]]['nonce'];
+        const blockHash         = tokenMints[tx[0]]['blockHash'];
+        const transactionIndex  = tokenMints[tx[0]]['transactionIndex'];
+        const gas               = tokenMints[tx[0]]['gas'];
+        const gasPrice          = tokenMints[tx[0]]['gasPrice'];
+        const gasUsed           = tokenMints[tx[0]]['gasUsed'];
+        const cumulativeGasUsed = tokenMints[tx[0]]['cumulativeGasUsed'];
 
+        // transfers dataset
+        const contractAddress   = tokenMints[tx[0]]['contractAddress'];
+        const tokenName         = tokenMints[tx[0]]['tokenName'];
+        const tokenSymbol       = tokenMints[tx[0]]['tokenSymbol'];
+        const tokenDecimal      = tokenMints[tx[0]]['tokenDecimal'];
 
+        // transactions dataset
+        const value             = tokenMints[tx[0]]['value'];
+        const isError           = tokenMints[tx[0]]['isError'];
+        const txreceipt_status  = tokenMints[tx[0]]['txreceipt_status'];
+        const methodId          = tokenMints[tx[0]]['methodId'];
+        const functionName      = tokenMints[tx[0]]['functionName'];
+        const input             = tokenMints[tx[0]]['input'];
 
+        // derived stats
 
-
-
-
-
-
-    // Rough pruning: remove ERC721 transfers and approvals
-    const mostTransactions = allTransactions.filter(x => !(['setapprovalforall', 'safetransferfrom', 'transferfrom'].includes(x['functionName'].split('(')[0].toLowerCase())));
-
-    // Filter only the transactions that were mints
-    const mintTransactionsRaw = mostTransactions.filter(x => Object.keys(project.mintFunctions).includes(x['methodId']));
-
-    // Make sure that each transaction only has one entry
-    const mintTransactionsUnique = mintTransactionsRaw.filter((x, i, a) => a.findIndex((y) => y['hash'] == x['hash']) == i);
-
-    // Remove entries that resulted in errors
-    const mintTransactionsSuccessful = mintTransactionsUnique.filter(x => x['isError'] == 0);
-
-    const mintTransactions = mintTransactionsSuccessful.map(x => {
-
-        const isoDate = new Date(parseInt(x['timeStamp']) * 1000);
-        const priceETHUSD = getEthPrice(isoDate);
-        const valueETH = x['value'] / 1000000000000000000.0;
-        const valueUSD = valueETH * priceETHUSD;
-        const input = x['input'];
-        const methodId = x['methodId'];
         const functionInfo = project.mintFunctions[methodId];
-        const numberMinted = project.getNumberMinted(methodId, input);
 
-        const result = {
-            // 1:1 copy of downloaded stats
-            'blockNumber'       : x['blockNumber'],
-            'timeStamp'         : x['timeStamp'],
-            'hash'              : x['hash'],
-            'nonce'             : x['nonce'],
-            'blockHash'         : x['blockHash'],
-            'transactionIndex'  : x['transactionIndex'],
-            'from'              : x['from'],
-            'to'                : x['to'],
-            'value'             : x['value'],
-            'gas'               : x['gas'],
-            'gasPrice'          : x['gasPrice'],
-            'isError'           : x['isError'],
-            'txreceipt_status'  : x['txreceipt_status'],
-            'input'             : x['input'],
-            'contractAddress'   : x['contractAddress'],
-            'cumulativeGasUsed' : x['cumulativeGasUsed'],
-            'gasUsed'           : x['gasUsed'],
-            'confirmations'     : x['confirmations'],
-            'methodId'          : x['methodId'],
-            'functionName'      : x['functionName'],
+        const tokenIDs = tokenMints.reduce((acc, val) => val['hash'] == tx[1] ? acc.concat(val['tokenID']) : acc, []);
+        const tokenCount = tokenIDs.length;
+
+        const isoDate = new Date(parseInt(timeStamp) * 1000);
+
+        const priceETHUSD = getEthPrice(isoDate);
+        const tokenValueETH = value / tokenCount / 1000000000000000000.0;
+        const tokenValueUSD = tokenValueETH * priceETHUSD;
+
+        const mintTransaction = {
+
+            // common
+            'blockNumber'       : blockNumber,
+            'timeStamp'         : timeStamp,
+            'hash'              : hash,
+            'nonce'             : nonce,
+            'blockHash'         : blockHash,
+            'transactionIndex'  : transactionIndex,
+            'gas'               : gas,
+            'gasPrice'          : gasPrice,
+            'gasUsed'           : gasUsed,
+            'cumulativeGasUsed' : cumulativeGasUsed,
+
+            // transfers dataset
+            'contractAddress'   : contractAddress,
+            'tokenName'         : tokenName,
+            'tokenSymbol'       : tokenSymbol,
+            'tokenDecimal'      : tokenDecimal,
+
+            // transactions dataset
+            'value'             : value,
+            'isError'           : isError,
+            'txreceipt_status'  : txreceipt_status,
+            'methodId'          : methodId,
+            'functionName'      : functionName,
+            'input'             : input,
+
             // derived stats
-            '_functionInfo'     : functionInfo,
-            '_isoDate'          : isoDate,
-            '_numberMinted'     : numberMinted,
-            '_valueETH'         : valueETH,
-            '_valueUSD'         : valueUSD,
-            '_priceETHUSD'      : priceETHUSD
-        }
+            'functionInfo'      : functionInfo,
+            'isoDate'           : isoDate,
+            'tokenIDs'          : tokenIDs,
+            'tokenCount'        : tokenCount,
+            'tokenValueETH'     : tokenValueETH,
+            'tokenValueUSD'     : tokenValueUSD,
+            'priceETHUSD'       : priceETHUSD
 
-        return result;
+        };
+
+        return mintTransaction;
     });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // // Rough pruning: remove ERC721 transfers and approvals
+    // const mostTransactions = allTransactions.filter(x => !(['setapprovalforall', 'safetransferfrom', 'transferfrom'].includes(x['functionName'].split('(')[0].toLowerCase())));
+
+    // // Filter only the transactions that were mints
+    // const mintTransactionsRaw = mostTransactions.filter(x => Object.keys(project.mintFunctions).includes(x['methodId']));
+
+    // // Make sure that each transaction only has one entry
+    // const mintTransactionsUnique = mintTransactionsRaw.filter((x, i, a) => a.findIndex((y) => y['hash'] == x['hash']) == i);
+
+    // // Remove entries that resulted in errors
+    // const mintTransactionsSuccessful = mintTransactionsUnique.filter(x => x['isError'] == 0);
+
+    // const mintTransactions = mintTransactionsSuccessful.map(x => {
+
+    //     const isoDate = new Date(parseInt(x['timeStamp']) * 1000);
+    //     const priceETHUSD = getEthPrice(isoDate);
+    //     const valueETH = x['value'] / 1000000000000000000.0;
+    //     const valueUSD = valueETH * priceETHUSD;
+    //     const input = x['input'];
+    //     const methodId = x['methodId'];
+    //     const functionInfo = project.mintFunctions[methodId];
+    //     const numberMinted = project.getNumberMinted(methodId, input);
+
+    //     const result = {
+    //         // 1:1 copy of downloaded stats
+    //         'blockNumber'       : x['blockNumber'],
+    //         'timeStamp'         : x['timeStamp'],
+    //         'hash'              : x['hash'],
+    //         'nonce'             : x['nonce'],
+    //         'blockHash'         : x['blockHash'],
+    //         'transactionIndex'  : x['transactionIndex'],
+    //         'from'              : x['from'],
+    //         'to'                : x['to'],
+    //         'value'             : x['value'],
+    //         'gas'               : x['gas'],
+    //         'gasPrice'          : x['gasPrice'],
+    //         'isError'           : x['isError'],
+    //         'txreceipt_status'  : x['txreceipt_status'],
+    //         'input'             : x['input'],
+    //         'contractAddress'   : x['contractAddress'],
+    //         'cumulativeGasUsed' : x['cumulativeGasUsed'],
+    //         'gasUsed'           : x['gasUsed'],
+    //         'confirmations'     : x['confirmations'],
+    //         'methodId'          : x['methodId'],
+    //         'functionName'      : x['functionName'],
+    //         // derived stats
+    //         '_functionInfo'     : functionInfo,
+    //         '_isoDate'          : isoDate,
+    //         '_numberMinted'     : numberMinted,
+    //         '_valueETH'         : valueETH,
+    //         '_valueUSD'         : valueUSD,
+    //         '_priceETHUSD'      : priceETHUSD
+    //     }
+
+    //     return result;
+    // });
 
     printCharts(project, mintTransactions);
 
+    writeFile('data/' + projectName + '_mints_tx.json', JSON.stringify(mintTransactions), showError);
     writeFile('data/' + projectName + '_mints.json', JSON.stringify(tokenMints), showError);
     writeFile('data/' + projectName + '_transfers.json', JSON.stringify(uniqueTokenTransfers), showError);
-    writeFile('data/' + projectName + '_raw.json', JSON.stringify(mostTransactions), showError);
-    writeFile('data/' + projectName + '_parsed.json', JSON.stringify(mintTransactions), showError);
+    // writeFile('data/' + projectName + '_raw.json', JSON.stringify(mostTransactions), showError);
+    // writeFile('data/' + projectName + '_parsed.json', JSON.stringify(mintTransactions), showError);
 }
 
 const urls = ['https://api.etherscan.io/api?module=account&action=tokennfttx&address=0x0000000000000000000000000000000000000000&contractaddress=' + project.contractAddresses[0] + '&startblock=']
