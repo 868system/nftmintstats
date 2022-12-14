@@ -5,7 +5,7 @@ import { argv } from 'process';
 import { writeFile, readFileSync } from 'fs';
 
 import { projects } from './projects.js';
-import { printCharts } from './visualizers.js'
+import { printCharts } from './output.js'
 
 
 const myArgs = argv.slice(2);
@@ -113,7 +113,12 @@ const process = (allTransfers, allTransactions) => {
 
     const uniqueMintTransactions = tokenMints.map((tokenMint, tokenMintIdx) => [tokenMintIdx, tokenMint['hash']]).filter((x, i, a) => a.findIndex(y => y[1] == x[1]) == i);
 
+    const uniqueFunctionsRaw = tokenMints.map(tokenMint => [tokenMint['methodId'], tokenMint['functionName']]).filter((x, i, a) => a.findIndex(y => y[0] == x[0]) == i);
+    const uniqueFunctions = uniqueFunctionsRaw.map(x => [x[0], x[1].split('(')[0]]);
+
     console.log(uniqueMintTransactions.length + ' unique mint transactions');
+    console.log('mint functions:');
+    console.log(uniqueFunctions);
 
     const mintTransactions = uniqueMintTransactions.map(tx => {
 
@@ -140,12 +145,12 @@ const process = (allTransfers, allTransactions) => {
         const isError           = tokenMints[tx[0]]['isError'];
         const txreceipt_status  = tokenMints[tx[0]]['txreceipt_status'];
         const methodId          = tokenMints[tx[0]]['methodId'];
-        const functionName      = tokenMints[tx[0]]['functionName'];
+        const functionSignature = tokenMints[tx[0]]['functionName'];
         const input             = tokenMints[tx[0]]['input'];
 
         // derived stats
 
-        const functionInfo = project.mintFunctions[methodId];
+        const functionName = functionSignature.split('(')[0];
 
         const tokenIDs = tokenMints.reduce((acc, val) => val['hash'] == tx[1] ? acc.concat(val['tokenID']) : acc, []);
         const tokenCount = tokenIDs.length;
@@ -181,11 +186,11 @@ const process = (allTransfers, allTransactions) => {
             'isError'           : isError,
             'txreceipt_status'  : txreceipt_status,
             'methodId'          : methodId,
-            'functionName'      : functionName,
+            'functionSignature' : functionSignature,
             'input'             : input,
 
             // derived stats
-            'functionInfo'      : functionInfo,
+            'functionName'      : functionName,
             'isoDate'           : isoDate,
             'tokenIDs'          : tokenIDs,
             'tokenCount'        : tokenCount,

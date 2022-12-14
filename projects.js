@@ -11,14 +11,6 @@ const projectDefs = {
             '0x7c69e207': ['devMint'          , 'Treasury']
         },
 
-        getNumberMinted: (methodId, input) => {
-            return  methodId == '0x4bc0a305' ? 1 :
-                    methodId == '0x59287fab' ||
-                    methodId == '0x7b671780' ? parseInt(input.substring(10, 74), 16) :
-                    methodId == '0x7c69e207' ? 129 :
-                    NaN;
-        },
-
     },
 
     'bayc': {
@@ -27,17 +19,11 @@ const projectDefs = {
 
         mintFunctions: {
             '0xa723533e': ['mintApe'     , 'Ape Mint'],
-            '0xb0f67427': ['reserveApes' , 'Reserve Apes'],
+            '0xb0f67427': ['reserveApes' , 'Reserve Apes']
         },
 
-        getNumberMinted: (methodId, input) => {
-            return  methodId == '0xa723533e' ? parseInt(input.substring(10, 74), 16) :
-                    methodId == '0xb0f67427' ? 30 :
-                    NaN;
-        },
     },
 
-    // TODO: MAYC not quite working yet... 19343 detected mints out of 19430
     'mayc': {
 
         contractAddresses: [
@@ -51,22 +37,9 @@ const projectDefs = {
 
         mintFunctions: {
             '0xc15e24bc': ['mintMutants'        , 'Mint Mutants'],
-            '0xe73a9a25': ['mutateApeWithSerum' , 'Mutate Ape With Serum'],
-            '0x6a761202': ['execTransaction'    , 'Gnosis Safe Proxy']
+            '0xe73a9a25': ['mutateApeWithSerum' , 'Mutate Ape With Serum']
         },
 
-        getNumberMinted: (methodId, input) => {
-            return  methodId == '0xc15e24bc' ? parseInt(input.substring(10, 74), 16) :
-                    methodId == '0xe73a9a25' ? 1 :
-                    methodId == '0x6a761202' &&
-                        input.substring(34, 74).toLowerCase() == '60e4d786628fea6478f785a6d7e704777c86a7c6' &&
-                        input.substring(714, 722) == 'c15e24bc' ? parseInt(input.substring(722, 786), 16) :
-                    methodId == '0x6a761202' &&
-                        input.substring(34, 74).toLowerCase() == '60e4d786628fea6478f785a6d7e704777c86a7c6' &&
-                        input.substring(714, 722) == 'e73a9a25' ? 1 :
-                    methodId == '0x6a761202' ? 0 :
-                    NaN;
-        },
     }
 
 }

@@ -10,8 +10,8 @@ const printCharts = (project, mintTransactions) => {
     const costsUSD = Object.keys(project.mintFunctions).map( methodId =>
         Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['tokenValueUSD'] * parseFloat(tx['tokenCount'])) : parseFloat(acc), 0.0) * 100.0) / 100.0);
 
-    const costTotalETH  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['tokenValueETH']), 0.0) * 100.0) / 100.0;
-    const costTotalUSD  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['tokenValueUSD']), 0.0) * 100.0) / 100.0;
+    const costTotalETH  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['tokenValueETH'] * parseFloat(tx['tokenCount'])), 0.0) * 100.0) / 100.0;
+    const costTotalUSD  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['tokenValueUSD'] * parseFloat(tx['tokenCount'])), 0.0) * 100.0) / 100.0;
 
     // Column widths
     const widthLabel = (Object.values(project.mintFunctions).reduce((a,x) => x[1].length > a ? x[1].length : a, 0) + 1).toLocaleString(undefined);
