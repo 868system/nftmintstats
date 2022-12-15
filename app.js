@@ -93,7 +93,7 @@ const process = (allTransfers, allTransactions) => {
 
             // Collisions Transfer
             // "from": "0x0000000000000000000000000000000000000000",
-            // "to": "0xc4f4325490842426816764958a234857df4d150a",
+            'to'              : thisTokenTransfer['to'],
             'contractAddress' : thisTokenTransfer['contractAddress'],
             // "input": "deprecated",
 
@@ -113,12 +113,11 @@ const process = (allTransfers, allTransactions) => {
 
     const uniqueMintTransactions = tokenMints.map((tokenMint, tokenMintIdx) => [tokenMintIdx, tokenMint['hash']]).filter((x, i, a) => a.findIndex(y => y[1] == x[1]) == i);
 
-    const uniqueFunctionsRaw = tokenMints.map(tokenMint => [tokenMint['methodId'], tokenMint['functionName']]).filter((x, i, a) => a.findIndex(y => y[0] == x[0]) == i);
-    const uniqueFunctions = uniqueFunctionsRaw.map(x => [x[0], x[1].split('(')[0]]);
 
-    console.log(uniqueMintTransactions.length + ' unique mint transactions');
-    console.log('mint functions:');
-    console.log(uniqueFunctions);
+
+    // console.log(uniqueMintTransactions.length + ' unique mint transactions');
+    // console.log('mint functions:');
+    // console.log(uniqueFunctions);
 
     const mintTransactions = uniqueMintTransactions.map(tx => {
 
@@ -136,6 +135,7 @@ const process = (allTransfers, allTransactions) => {
 
         // transfers dataset
         const contractAddress   = tokenMints[tx[0]]['contractAddress'];
+        const to                = tokenMints[tx[0]]['to'];
         const tokenName         = tokenMints[tx[0]]['tokenName'];
         const tokenSymbol       = tokenMints[tx[0]]['tokenSymbol'];
         const tokenDecimal      = tokenMints[tx[0]]['tokenDecimal'];
@@ -146,66 +146,155 @@ const process = (allTransfers, allTransactions) => {
         const txreceipt_status  = tokenMints[tx[0]]['txreceipt_status'];
         const methodId          = tokenMints[tx[0]]['methodId'];
         const functionSignature = tokenMints[tx[0]]['functionName'];
-        const input             = tokenMints[tx[0]]['input'];
 
         // derived stats
 
         const functionName = functionSignature.split('(')[0];
 
         const tokenIDs = tokenMints.reduce((acc, val) => val['hash'] == tx[1] ? acc.concat(val['tokenID']) : acc, []);
+        const tokenIDsString = tokenIDs.join(' ');
         const tokenCount = tokenIDs.length;
 
         const isoDate = new Date(parseInt(timeStamp) * 1000);
+        const date = isoDate.toLocaleDateString('en-us', { year: 'numeric', month: 'numeric', day: 'numeric'});
 
-        const priceETHUSD = getEthPrice(isoDate);
-        const tokenValueETH = value / tokenCount / 1000000000000000000.0;
+        const priceETHUSD   = getEthPrice(isoDate);
+        const valueETH      = parseFloat(value) / 1000000000000000000.0;
+        const tokenValueETH = valueETH / tokenCount;
         const tokenValueUSD = tokenValueETH * priceETHUSD;
+
+        const gasUsedETH    = parseFloat(gasUsed) * parseFloat(gasPrice) / 1000000000000000000.0;
+        const gasUsedUSD    = gasUsedETH * priceETHUSD;
 
         const mintTransaction = {
 
-            // common
-            'blockNumber'       : blockNumber,
-            'timeStamp'         : timeStamp,
-            'hash'              : hash,
-            'nonce'             : nonce,
-            'blockHash'         : blockHash,
-            'transactionIndex'  : transactionIndex,
-            'gas'               : gas,
-            'gasPrice'          : gasPrice,
-            'gasUsed'           : gasUsed,
-            'cumulativeGasUsed' : cumulativeGasUsed,
+            // transaction
+            'transactionHash'   : hash,
+            'minterAddress'     : to,
+            'functionName'      : functionName,
+            'date'              : date,
 
-            // transfers dataset
-            'contractAddress'   : contractAddress,
+            // costs
+            'priceETHUSD'       : Math.round(priceETHUSD * 100.0) / 100.0,
+            'totalValue'        : Math.round(valueETH * 100000000.0) / 100000000.0,
+            'tokenValueETH'     : Math.round(tokenValueETH * 100000000.0) / 100000000.0,
+            'tokenValueUSD'     : Math.round(tokenValueUSD * 100.0) / 100.0,
+
+            // gas
+            'gasUsedETH'        : Math.round(gasUsedETH * 100000000.0) / 100000000.0,
+            'gasUsedUSD'        : Math.round(gasUsedUSD * 100.0) / 100.0,
+
+            // informational
             'tokenName'         : tokenName,
             'tokenSymbol'       : tokenSymbol,
             'tokenDecimal'      : tokenDecimal,
+            'contractAddress'   : contractAddress,
 
-            // transactions dataset
-            'value'             : value,
-            'isError'           : isError,
-            'txreceipt_status'  : txreceipt_status,
+            // stats for nerds
+            'blockNumber'       : blockNumber,
+            'blockHash'         : blockHash,
+            'nonce'             : nonce,
+            'transactionIndex'  : transactionIndex,
             'methodId'          : methodId,
-            'functionSignature' : functionSignature,
-            'input'             : input,
-
-            // derived stats
-            'functionName'      : functionName,
+            'value'             : value,
+            'gasPrice'          : gasPrice,
+            'gas'               : gas,
+            'gasUsed'           : gasUsed,
+            'cumulativeGasUsed' : cumulativeGasUsed,
+            'isError'           : isError,
+            'txReceiptStatus'   : txreceipt_status,
+            'timeStamp'         : timeStamp,
             'isoDate'           : isoDate,
-            'tokenIDs'          : tokenIDs,
-            'tokenCount'        : tokenCount,
-            'tokenValueETH'     : tokenValueETH,
-            'tokenValueUSD'     : tokenValueUSD,
-            'priceETHUSD'       : priceETHUSD
+            'txTokenCount'      : tokenCount,
+            'txTokenIDs'        : tokenIDsString
 
         };
 
         return mintTransaction;
     });
 
+    const mintItems = mintTransactions.reduce((result, transaction) => {
+
+        // duplicate the transaction's entry for each token ID it minted
+        const expansion = transaction['txTokenIDs'].split(' ').reduce((acc, id) => {
+
+            return acc.concat([{['tokenID']: id, ...transaction}]);
+
+        }, []);
+
+        return result.concat(expansion);
+
+    }, []);
+
+
+
+
+
+    const mintItemsCSV = mintItems.reduce((acc, txn) =>
+        acc.concat([Object.values(txn).map(x => '"' + x + '"').join(',')]),
+        [Object.keys(mintItems[0]).map(x => '"' + x + '"').join(',')]);
+
+    writeFile('data/' + projectName + '.csv', mintItemsCSV.join('\n'), showError);
+
+
+    const uniqueFunctionsRaw = mintTransactions.map(txn => [txn['methodId'], txn['functionName']]).filter((x, i, a) => a.findIndex(y => y[0] == x[0]) == i);
+
+
+
+
+
+    const itemsTotal = mintItems.length;
+
+    const ethTotal = mintItems.reduce((acc, item) =>
+        parseFloat(acc) + item['tokenValueETH'], 0.0
+    )
+
+    const usdTotal = mintItems.reduce((acc, item) =>
+        parseFloat(acc) + item['tokenValueUSD'], 0.0
+    )
+
+    const itemsPerFunction = uniqueFunctionsRaw.map(x => x[0]).map(methodId =>
+        mintItems.reduce((acc, item) =>
+            item['methodId'] == methodId ?
+                parseInt(acc) + 1 : parseInt(acc), 0
+        )
+    );
+
+    const ethPerFunction = uniqueFunctionsRaw.map(x => x[0]).map(methodId =>
+        mintItems.reduce((acc, item) =>
+            item['methodId'] == methodId ?
+                parseFloat(acc) + item['tokenValueETH'] : parseFloat(acc), 0.0
+        )
+    );
+
+    const usdPerFunction = uniqueFunctionsRaw.map(x => x[0]).map(methodId =>
+        mintItems.reduce((acc, item) =>
+            item['methodId'] == methodId ?
+                parseFloat(acc) + item['tokenValueUSD'] : parseFloat(acc), 0.0
+        )
+    );
+
+    console.log(uniqueFunctionsRaw.map(x => x[0]));
+    console.log(itemsPerFunction);
+    console.log(ethPerFunction);
+    console.log(usdPerFunction);
+    console.log(ethTotal);
+    console.log(usdTotal);
+    console.log(itemsTotal);
+
+
 
     printCharts(project, mintTransactions);
 
+
+
+
+
+
+
+
+
+    writeFile('data/' + projectName + '_mints_ids.json', JSON.stringify(mintItems), showError);
     writeFile('data/' + projectName + '_mints_tx.json', JSON.stringify(mintTransactions), showError);
     writeFile('data/' + projectName + '_mints.json', JSON.stringify(tokenMints), showError);
     writeFile('data/' + projectName + '_transfers.json', JSON.stringify(uniqueTokenTransfers), showError);

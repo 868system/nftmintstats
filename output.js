@@ -1,17 +1,19 @@
 
+
 const printCharts = (project, mintTransactions) => {
 
-    const itemsTotal = mintTransactions.reduce((acc, tx) => parseInt(acc) + parseInt(tx['tokenCount']), 0);
+
+    const itemsTotal = mintTransactions.reduce((acc, tx) => parseInt(acc) + parseInt(tx['txTokenCount']), 0);
     const items = Object.keys(project.mintFunctions).map( methodId =>
-        mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseInt(acc) + parseInt(tx['tokenCount']) : parseInt(acc), 0) );
+        mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseInt(acc) + parseInt(tx['txTokenCount']) : parseInt(acc), 0) );
 
     const costsETH = Object.keys(project.mintFunctions).map( methodId =>
-        Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['tokenValueETH'] * parseFloat(tx['tokenCount'])) : parseFloat(acc), 0.0) * 100.0) / 100.0);
+        Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['tokenValueETH'] * parseFloat(tx['txTokenCount'])) : parseFloat(acc), 0.0) * 100.0) / 100.0);
     const costsUSD = Object.keys(project.mintFunctions).map( methodId =>
-        Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['tokenValueUSD'] * parseFloat(tx['tokenCount'])) : parseFloat(acc), 0.0) * 100.0) / 100.0);
+        Math.round(mintTransactions.reduce((acc, tx) => tx['methodId'] == methodId ? parseFloat(acc) + parseFloat(tx['tokenValueUSD'] * parseFloat(tx['txTokenCount'])) : parseFloat(acc), 0.0) * 100.0) / 100.0);
 
-    const costTotalETH  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['tokenValueETH'] * parseFloat(tx['tokenCount'])), 0.0) * 100.0) / 100.0;
-    const costTotalUSD  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['tokenValueUSD'] * parseFloat(tx['tokenCount'])), 0.0) * 100.0) / 100.0;
+    const costTotalETH  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['tokenValueETH'] * parseFloat(tx['txTokenCount'])), 0.0) * 100.0) / 100.0;
+    const costTotalUSD  =  Math.round(mintTransactions.reduce((acc, tx) => parseFloat(acc) + parseFloat(tx['tokenValueUSD'] * parseFloat(tx['txTokenCount'])), 0.0) * 100.0) / 100.0;
 
     // Column widths
     const widthLabel = (Object.values(project.mintFunctions).reduce((a,x) => x[1].length > a ? x[1].length : a, 0) + 1).toLocaleString(undefined);
