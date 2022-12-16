@@ -245,46 +245,52 @@ const process = (allTransfers, allTransactions) => {
 
     const itemsTotal = mintItems.length;
 
-    const ethTotal = mintItems.reduce((acc, item) =>
-        parseFloat(acc) + item['tokenValueETH'], 0.0
-    )
-
-    const usdTotal = mintItems.reduce((acc, item) =>
-        parseFloat(acc) + item['tokenValueUSD'], 0.0
-    )
-
-    const itemsPerFunction = uniqueFunctionsRaw.map(x => x[0]).map(methodId =>
+    const [ethTotal, usdTotal] =
         mintItems.reduce((acc, item) =>
-            item['methodId'] == methodId ?
-                parseInt(acc) + 1 : parseInt(acc), 0
-        )
-    );
+        [
+            parseFloat(acc[0]) + item['tokenValueETH'],
+            parseFloat(acc[1]) + item['tokenValueUSD'],
+        ],
+        [0.0, 0.0]);
 
-    const ethPerFunction = uniqueFunctionsRaw.map(x => x[0]).map(methodId =>
-        mintItems.reduce((acc, item) =>
-            item['methodId'] == methodId ?
-                parseFloat(acc) + item['tokenValueETH'] : parseFloat(acc), 0.0
-        )
-    );
+    console.log([itemsTotal, ethTotal, usdTotal]);
 
-    const usdPerFunction = uniqueFunctionsRaw.map(x => x[0]).map(methodId =>
-        mintItems.reduce((acc, item) =>
-            item['methodId'] == methodId ?
-                parseFloat(acc) + item['tokenValueUSD'] : parseFloat(acc), 0.0
-        )
-    );
+    const functionStats = uniqueFunctionsRaw.map(x => {
 
-    console.log(uniqueFunctionsRaw.map(x => x[0]));
-    console.log(itemsPerFunction);
-    console.log(ethPerFunction);
-    console.log(usdPerFunction);
-    console.log(ethTotal);
-    console.log(usdTotal);
-    console.log(itemsTotal);
+        const [methodId, functionName] = x;
+
+        const [itemsPerFunction, ethPerFunction, usdPerFunction] =
+            mintItems.reduce((acc, item) =>
+            item['methodId'] == methodId ? [
+                parseInt(acc[0]) + 1,
+                parseFloat(acc[1]) + item['tokenValueETH'],
+                parseFloat(acc[2]) + item['tokenValueUSD']
+            ] :
+            [
+                parseInt(acc[0]),
+                parseFloat(acc[1]),
+                parseFloat(acc[2])
+            ],
+            [0, 0.0, 0.0]);
+
+        return {
+            'functionName'     : functionName,
+            'methodId'         : methodId,
+            'itemsPerFunction' : itemsPerFunction,
+            'ethPerFunction'   : ethPerFunction,
+            'usdPerFunction'   : usdPerFunction
+        }
+
+    });
 
 
 
-    printCharts(project, mintTransactions);
+    console.log(functionStats);
+
+
+    console.log();
+
+    //printCharts(project, mintTransactions);
 
 
 

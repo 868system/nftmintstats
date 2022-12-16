@@ -40,6 +40,14 @@ const projectDefs = {
             '0xe73a9a25': ['mutateApeWithSerum' , 'Mutate Ape With Serum']
         },
 
+    },
+
+    'spiritgates': {
+
+        contractAddresses: [
+            '0x19B436638d31bF38Ba33924e6e25f8ce2a764a52'
+        ]
+
     }
 
 }
