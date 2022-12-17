@@ -1,59 +1,59 @@
 "use strict";
 
-import { get } from 'https';
-import { argv } from 'process';
-import { writeFile, readFileSync } from 'fs';
-
-import { projects } from './projects.js';
-
+import { get          } from 'https';
+import { argv         } from 'process';
+import { writeFile,
+         readFileSync } from 'fs';
+import { projects     } from './projects.js';
 
 const myArgs = argv.slice(2);
+const projectName = myArgs[0]
+const project = projects[projectName];
 
 const showError = (err) => {
     if (err) console.log(err);
 }
 
-const projectName = myArgs[0]
-const project = projects(projectName);
+//-----------------------------
+// Ethereum historical prices
+//-----------------------------
 
-
-// Preload Ethereum price data
-
-const ethPricesRaw = readFileSync('data/eth_usd.csv', 'utf-8');
+const ethPricesRaw  = readFileSync('data/eth_usd.csv', 'utf-8');
 const ethPricesRows = ethPricesRaw.split(/\r\n|\n\r|\n|\r/).filter((x,i) => i>0 && x.length>0);
 
-const ethPrices = ethPricesRows.reduce((obj, row) => {
-
+const ethPrices = ethPricesRows.reduce((result, row) => {
     const rowItems = row.split(',');
+    const dateYMD  = rowItems[0].split('-');
+    const year     = dateYMD[0];
+    const month    = dateYMD[1] - 1; // January is 0
+    const day      = dateYMD[2];
 
-    const dateYMD = rowItems[0].split('-');
-    const year = dateYMD[0];
-    const month = dateYMD[1] - 1; // January is 0
-    const day = dateYMD[2];
-
-    const date = new Date(year, month, day);
+    const date  = new Date(year, month, day);
     const price = rowItems[5];
-
-    return ({ ...obj, [date]: parseFloat(price)})
+    return ({...result, [date]: parseFloat(price)})
 
 }, {});
 
 const getEthPrice = (date) => {
-    const year = date.getUTCFullYear();
+    const year  = date.getUTCFullYear();
     const month = date.getUTCMonth();
-    const day = date.getUTCDate();
+    const day   = date.getUTCDate();
 
     return ethPrices[new Date(year, month, day)];
 };
 
 
+//-----------------------------
+// Process raw datasets
+//-----------------------------
+
 const process = (allTransfers, allTransactions) => {
 
-    // One transfer per token only
-    // (overlap is expected because of how we download from Etherscan)
+    // The downloaded data can contain duplicate records because of
+    // how we download from Etherscan. We filter them out here
     const uniqueTokenTransfers = allTransfers.filter((x, i, a) => a.findIndex((y) => y['tokenID'] == x['tokenID']) == i);
 
-    // Construct an object containing each token's complete mint information
+    // Construct an object containing complete mint information per token
     // Use data from both transfers and transactions
     const tokenMints = uniqueTokenTransfers.map(thisTokenTransfer => {
 
@@ -328,31 +328,49 @@ const process = (allTransfers, allTransactions) => {
     writeFile('data/' + projectName + '_transfers.json', JSON.stringify(uniqueTokenTransfers), showError);
 }
 
-const urls = ['https://api.etherscan.io/api?module=account&action=tokennfttx&address=0x0000000000000000000000000000000000000000&contractaddress=' + project.contractAddresses[0] + '&startblock=']
-    .concat(project.contractAddresses.map(x => 'https://api.etherscan.io/api?module=account&action=txlist&address=' + x + '&startblock='))
 
-const download = async (urls, _currentUrlIdx, _transfers, _transactions, _currentContent) => {
+//-----------------------------
+// Download
+//-----------------------------
+
+//
+// https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc721-token-transfer-events-by-address
+//
+// tokennfttx: ERC721 transfers that come from 0x0000000000000000000000000000000000000000 are mints
+//
+const tokennfttxUrl = 'https://api.etherscan.io/api?module=account&action=tokennfttx&address=0x0000000000000000000000000000000000000000&contractaddress=';
+
+//
+// https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-normal-transactions-by-address
+//
+// txlist: If the address queried is a contract address, this returns all transactions under that contract
+//
+const txlistUrl     = 'https://api.etherscan.io/api?module=account&action=txlist&address=';
+
+const urls  = [tokennfttxUrl + project.contractAddresses[0] + '&startblock=']
+            .concat(project.contractAddresses.map(x => txlistUrl + x + '&startblock='))
+
+const download = async (urls, _transfers, _transactions, _currentUrlIdx, _currentContent) => {
 
     const currentUrlIdx = _currentUrlIdx !== undefined ? _currentUrlIdx : 0;
     const transfers     = _transfers     !== undefined ? _transfers     : [];
     const transactions  = _transactions  !== undefined ? _transactions  : [];
 
-    if (currentUrlIdx >= urls.length) {
-        // Proceed to process the datasets
-        process(transfers, transactions);
-    }
-
-    else {
+    // Process each URL in the array
+    if (currentUrlIdx < urls.length) {
 
         const url = urls[currentUrlIdx];
 
-        // either 'txlist' or 'tokennfttx'
+        // Extract dataset name from URL: 'txlist' or 'tokennfttx'
         const dataSet = url.split('action=')[1].split('&')[0];
 
+        // Each request only returns 10000 records, so we need to fetch several times
+        // for the same dataset. currentContent and currentBlock keeps track.
         const currentContent = _currentContent !== undefined ? _currentContent : [];
-        const currentBlock = currentContent.length == 0 ? 0 :
-                            Math.max(...currentContent.map(x => x['blockNumber']));
+        const currentBlock   = currentContent.length == 0 ? 0 :
+                                Math.max(...currentContent.map(x => x['blockNumber']));
 
+        // Etherscan free tier API is restricted to 1 request per 5 seconds
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         get(url + currentBlock, (response) => {
@@ -361,27 +379,36 @@ const download = async (urls, _currentUrlIdx, _transfers, _transactions, _curren
                 .on('data', (chunk) => chunks.push(chunk))
                 .on('end', () => {
 
-                    const content = JSON.parse(chunks.join(''))['result'];
+                    const content        = JSON.parse(chunks.join(''))['result'];
                     const updatedContent = currentContent.concat(content);
 
                     console.log(updatedContent.length + ' records retrieved from [' + currentUrlIdx + '] \'' + dataSet + '\'' );
 
+                    // If we receive 10000 records, we can assume there's more left
+                    // Adjust currentContent and currentBlock, and download the next page
                     if (content.length >= 10000) {
-                        download(urls, currentUrlIdx, transfers, transactions, updatedContent);
+                        download(urls, transfers, transactions, currentUrlIdx, updatedContent);
                     }
+                    // If it's less that 10000 records, that's the last page of the dataset
+                    // Store what we have so far in updatedTransfers and updatedTransactions
+                    // and then move the URL index to the next one
                     else {
-                        const updatedTransfers = dataSet == 'tokennfttx' ? transfers.concat(updatedContent) : transfers;
-                        const updatedTransactions = dataSet == 'txlist' ? transactions.concat(updatedContent) : transactions;
-
-                        download(urls, currentUrlIdx + 1, updatedTransfers, updatedTransactions);
+                        const updatedTransfers    = dataSet == 'tokennfttx' ? transfers.concat(updatedContent)    : transfers;
+                        const updatedTransactions = dataSet == 'txlist'     ? transactions.concat(updatedContent) : transactions;
+                        download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1);
                     }
-
                 });
         });
     }
+    else {
+        // All downloads done; proceed to process
+        process(transfers, transactions);
+    }
 }
 
-const start = () => {
-    download(urls);
-}
+
+//-----------------------------
+// Start the program
+//-----------------------------
+const start = () => download(urls);
 start();
