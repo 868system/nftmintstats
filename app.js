@@ -5,7 +5,6 @@ import { argv } from 'process';
 import { writeFile, readFileSync } from 'fs';
 
 import { projects } from './projects.js';
-import { printCharts } from './output.js'
 
 
 const myArgs = argv.slice(2);
@@ -234,7 +233,7 @@ const process = (allTransfers, allTransactions) => {
         acc.concat([Object.values(txn).map(x => '"' + x + '"').join(',')]),
         [Object.keys(mintItems[0]).map(x => '"' + x + '"').join(',')]);
 
-    writeFile('data/' + projectName + '.csv', mintItemsCSV.join('\n'), showError);
+    writeFile('data/' + projectName + '_tokens.csv', mintItemsCSV.join('\n'), showError);
 
 
     const uniqueFunctionsRaw = mintTransactions.map(txn => [txn['methodId'], txn['functionName']]).filter((x, i, a) => a.findIndex(y => y[0] == x[0]) == i);
@@ -253,44 +252,67 @@ const process = (allTransfers, allTransactions) => {
         ],
         [0.0, 0.0]);
 
-    console.log([itemsTotal, ethTotal, usdTotal]);
+    //console.log([itemsTotal, ethTotal, usdTotal]);
 
     const functionStats = uniqueFunctionsRaw.map(x => {
 
         const [methodId, functionName] = x;
 
-        const [itemsPerFunction, ethPerFunction, usdPerFunction] =
+
+        // 'priceETHUSD'       : Math.round(priceETHUSD * 100.0) / 100.0,
+        // 'totalValue'        : Math.round(valueETH * 100000000.0) / 100000000.0,
+
+
+        const [
+            itemsPerFunction,
+            totalETH,
+            totalUSD,
+            totalGasETH,
+            totalGasUSD
+        ] =
             mintItems.reduce((acc, item) =>
             item['methodId'] == methodId ? [
                 parseInt(acc[0]) + 1,
-                parseFloat(acc[1]) + item['tokenValueETH'],
-                parseFloat(acc[2]) + item['tokenValueUSD']
+                parseFloat(acc[1]) + Math.round(item['tokenValueETH'] * 100000000.0) / 100000000.0,
+                parseFloat(acc[2]) + Math.round(item['tokenValueUSD'] * 100.0) / 100.0,
+                parseFloat(acc[3]) + Math.round(item['gasUsedETH'] * 100000000.0) / 100000000.0,
+                parseFloat(acc[4]) + Math.round(item['gasUsedUSD'] * 100.0) / 100.0
             ] :
             [
                 parseInt(acc[0]),
                 parseFloat(acc[1]),
-                parseFloat(acc[2])
+                parseFloat(acc[2]),
+                parseFloat(acc[3]),
+                parseFloat(acc[4])
             ],
-            [0, 0.0, 0.0]);
+            [0, 0.0, 0.0, 0.0, 0.0]);
 
         return {
-            'functionName'     : functionName,
-            'methodId'         : methodId,
-            'itemsPerFunction' : itemsPerFunction,
-            'ethPerFunction'   : ethPerFunction,
-            'usdPerFunction'   : usdPerFunction
+            'functionName'  : functionName,
+            'methodId'      : methodId,
+            'items'         : itemsPerFunction,
+            'totalETH'      : Math.round(totalETH * 100000000.0) / 100000000.0,
+            'totalUSD'      : Math.round(totalUSD * 100.0) / 100.0,
+            'averageETH'    : Math.round(totalETH / itemsPerFunction * 100000000.0) / 100000000.0,
+            'averageUSD'    : Math.round(totalUSD / itemsPerFunction * 100.0) / 100.0,
+            'totalGasETH'   : Math.round(totalGasETH * 100000000.0) / 100000000.0,
+            'totalGasUSD'   : Math.round(totalGasUSD * 100.0) / 100.0,
+            'averageGasETH' : Math.round(totalGasETH / itemsPerFunction * 100000000.0) / 100000000.0,
+            'averageGasUSD' : Math.round(totalGasUSD / itemsPerFunction * 100.0) / 100.0
         }
 
     });
 
 
+    const functionsCSV = functionStats.reduce((acc, txn) =>
+        acc.concat([Object.values(txn).map(x => '"' + x + '"').join(',')]),
+        [Object.keys(functionStats[0]).map(x => '"' + x + '"').join(',')]);
 
-    console.log(functionStats);
+    writeFile('data/' + projectName + '_functions.csv', functionsCSV.join('\n'), showError);
+    //console.log(functionStats);
 
 
     console.log();
-
-    //printCharts(project, mintTransactions);
 
 
 
