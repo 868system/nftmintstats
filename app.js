@@ -64,10 +64,10 @@ const txlistUrl     = 'https://api.etherscan.io/api?module=account&action=txlist
 const urls  = [tokennfttxUrl + project.contractAddresses[0] + '&startblock=']
             .concat(project.contractAddresses.map(x => txlistUrl + x + '&startblock='))
 
-const download = async (urls, _transfers, _transactions, _currentUrlIdx, _currentContent) => {
+const download = async (urls, _mints, _transactions, _currentUrlIdx, _currentContent) => {
 
     const currentUrlIdx = _currentUrlIdx !== undefined ? _currentUrlIdx : 0;
-    const transfers     = _transfers     !== undefined ? _transfers     : [];
+    const mints         = _mints         !== undefined ? _mints     : [];
     const transactions  = _transactions  !== undefined ? _transactions  : [];
 
     // Process each URL in the array
@@ -101,22 +101,22 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
                     // If we receive 10000 records, we can assume there's more left
                     // Adjust currentContent and currentBlock, and download the next page
                     if (content.length >= 10000) {
-                        download(urls, transfers, transactions, currentUrlIdx, updatedContent);
+                        download(urls, mints, transactions, currentUrlIdx, updatedContent);
                     }
                     // If it's less that 10000 records, that's the last page of the dataset
                     // Store what we have so far in updatedTransfers and updatedTransactions
                     // and then move the URL index to the next one
                     else {
-                        const updatedTransfers    = dataSet == 'tokennfttx' ? transfers.concat(updatedContent)    : transfers;
+                        const updatedMints        = dataSet == 'tokennfttx' ? mints.concat(updatedContent)        : mints;
                         const updatedTransactions = dataSet == 'txlist'     ? transactions.concat(updatedContent) : transactions;
-                        download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1);
+                        download(urls, updatedMints, updatedTransactions, currentUrlIdx + 1);
                     }
                 });
         });
     }
     else {
         // All downloads done; proceed to process
-        process(transfers, transactions);
+        process(mints, transactions);
     }
 }
 
@@ -131,9 +131,9 @@ const process = (allTransfers, allTransactions) => {
     // how we download from Etherscan. We filter them out here
     const uniqueTokenTransfers = allTransfers.filter((x, i, a) => a.findIndex((y) => y['tokenID'] == x['tokenID']) == i);
 
-    // Construct an object containing complete mint information per token
+    // Construct an object containing mint information per token
     // Use data from both transfers and transactions
-    const tokenMints = uniqueTokenTransfers.map(thisTokenTransfer => {
+    const mintsPerToken = uniqueTokenTransfers.map(thisTokenTransfer => {
 
         const thisTokenTransaction = allTransactions.find(x => x['isError'] == 0 && x['hash'] == thisTokenTransfer['hash']);
 
@@ -188,7 +188,7 @@ const process = (allTransfers, allTransactions) => {
 
     });
 
-    const uniqueMintTransactions = tokenMints.map((tokenMint, tokenMintIdx) => [tokenMintIdx, tokenMint['hash']]).filter((x, i, a) => a.findIndex(y => y[1] == x[1]) == i);
+    const uniqueMintTransactions = mintsPerToken.map((tokenMint, tokenMintIdx) => [tokenMintIdx, tokenMint['hash']]).filter((x, i, a) => a.findIndex(y => y[1] == x[1]) == i);
 
 
 
@@ -199,36 +199,36 @@ const process = (allTransfers, allTransactions) => {
     const mintTransactions = uniqueMintTransactions.map(tx => {
 
         // common
-        const blockNumber       = tokenMints[tx[0]]['blockNumber'];
-        const timeStamp         = tokenMints[tx[0]]['timeStamp'];
-        const hash              = tokenMints[tx[0]]['hash'];
-        const nonce             = tokenMints[tx[0]]['nonce'];
-        const blockHash         = tokenMints[tx[0]]['blockHash'];
-        const transactionIndex  = tokenMints[tx[0]]['transactionIndex'];
-        const gas               = tokenMints[tx[0]]['gas'];
-        const gasPrice          = tokenMints[tx[0]]['gasPrice'];
-        const gasUsed           = tokenMints[tx[0]]['gasUsed'];
-        const cumulativeGasUsed = tokenMints[tx[0]]['cumulativeGasUsed'];
+        const blockNumber       = mintsPerToken[tx[0]]['blockNumber'];
+        const timeStamp         = mintsPerToken[tx[0]]['timeStamp'];
+        const hash              = mintsPerToken[tx[0]]['hash'];
+        const nonce             = mintsPerToken[tx[0]]['nonce'];
+        const blockHash         = mintsPerToken[tx[0]]['blockHash'];
+        const transactionIndex  = mintsPerToken[tx[0]]['transactionIndex'];
+        const gas               = mintsPerToken[tx[0]]['gas'];
+        const gasPrice          = mintsPerToken[tx[0]]['gasPrice'];
+        const gasUsed           = mintsPerToken[tx[0]]['gasUsed'];
+        const cumulativeGasUsed = mintsPerToken[tx[0]]['cumulativeGasUsed'];
 
         // transfers dataset
-        const contractAddress   = tokenMints[tx[0]]['contractAddress'];
-        const to                = tokenMints[tx[0]]['to'];
-        const tokenName         = tokenMints[tx[0]]['tokenName'];
-        const tokenSymbol       = tokenMints[tx[0]]['tokenSymbol'];
-        const tokenDecimal      = tokenMints[tx[0]]['tokenDecimal'];
+        const contractAddress   = mintsPerToken[tx[0]]['contractAddress'];
+        const to                = mintsPerToken[tx[0]]['to'];
+        const tokenName         = mintsPerToken[tx[0]]['tokenName'];
+        const tokenSymbol       = mintsPerToken[tx[0]]['tokenSymbol'];
+        const tokenDecimal      = mintsPerToken[tx[0]]['tokenDecimal'];
 
         // transactions dataset
-        const value             = tokenMints[tx[0]]['value'];
-        const isError           = tokenMints[tx[0]]['isError'];
-        const txreceipt_status  = tokenMints[tx[0]]['txreceipt_status'];
-        const methodId          = tokenMints[tx[0]]['methodId'];
-        const functionSignature = tokenMints[tx[0]]['functionName'];
+        const value             = mintsPerToken[tx[0]]['value'];
+        const isError           = mintsPerToken[tx[0]]['isError'];
+        const txreceipt_status  = mintsPerToken[tx[0]]['txreceipt_status'];
+        const methodId          = mintsPerToken[tx[0]]['methodId'];
+        const functionSignature = mintsPerToken[tx[0]]['functionName'];
 
         // derived stats
 
         const functionName = functionSignature.split('(')[0];
 
-        const tokenIDs = tokenMints.reduce((acc, val) => val['hash'] == tx[1] ? acc.concat(val['tokenID']) : acc, []);
+        const tokenIDs = mintsPerToken.reduce((acc, val) => val['hash'] == tx[1] ? acc.concat(val['tokenID']) : acc, []);
         const tokenIDsString = tokenIDs.join(' ');
         const tokenCount = tokenIDs.length;
 
@@ -402,7 +402,7 @@ const process = (allTransfers, allTransactions) => {
 
     writeFile('data/' + projectName + '_mints_ids.json', JSON.stringify(mintItems), showError);
     writeFile('data/' + projectName + '_mints_tx.json', JSON.stringify(mintTransactions), showError);
-    writeFile('data/' + projectName + '_mints.json', JSON.stringify(tokenMints), showError);
+    writeFile('data/' + projectName + '_mints.json', JSON.stringify(mintsPerToken), showError);
     writeFile('data/' + projectName + '_transfers.json', JSON.stringify(uniqueTokenTransfers), showError);
 }
 
