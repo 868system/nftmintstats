@@ -17,7 +17,7 @@ const projects = {
 
     // Otherdeed for Otherside
     // RangeError: Maximum call stack size exceeded
-    'othr'              : {contractAddresses: [ '0x34d85c9CDeB23FA97cb08333b511ac86E1C4E258'    ]},
+    // 'othr'              : {contractAddresses: [ '0x34d85c9CDeB23FA97cb08333b511ac86E1C4E258'    ]},
 
     // Azuki
     'azuki'             : {contractAddresses: [ '0xED5AF388653567Af2F388E6224dC7C4b3241C544'    ]},
@@ -32,7 +32,7 @@ const projects = {
 
     // Sandbox
     // Polygon NFTs can't be processed
-    'land'              : {contractAddresses: [ '0x9d305a42A3975Ee4c1C57555BeD5919889DCE63F'    ]},
+    // 'land'              : {contractAddresses: [ '0x9d305a42A3975Ee4c1C57555BeD5919889DCE63F'    ]},
 
     // Doodles
     'doodle'            : {contractAddresses: [ '0x8a90CAb2b38dba80c64b7734e58Ee1dB38B8992e',

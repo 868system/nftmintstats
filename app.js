@@ -70,9 +70,12 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
     const transfers     = _transfers     !== undefined ? _transfers     : [];
     const transactions  = _transactions  !== undefined ? _transactions  : [];
 
-    // Process each URL in the array
-    if (currentUrlIdx < urls.length) {
-
+    if (currentUrlIdx >= urls.length) {
+        // All downloads done; proceed to process
+        process(transfers, transactions);
+    }
+    else {
+        // Process each URL in the array
         const url = urls[currentUrlIdx];
 
         // Extract dataset name from URL: 'txlist' or 'tokennfttx'
@@ -85,7 +88,7 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
                                 Math.max(...currentContent.map(x => x['blockNumber']));
 
         // Etherscan free tier API is restricted to 1 request per 5 seconds
-        await new Promise(resolve => setTimeout(resolve, 6000));
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
         get(url + currentBlock, (response) => {
             const chunks = [];
@@ -96,27 +99,33 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
                     const content        = JSON.parse(chunks.join(''))['result'];
                     const updatedContent = currentContent.concat(content);
 
-                    console.log(updatedContent.length + ' records retrieved from [' + currentUrlIdx + '] \'' + dataSet + '\'' );
+                    // This deals with the API rate limit message
+                    if (content == 'Max rate limit reached, please use API Key for higher rate limit') {
 
-                    // If we receive 10000 records, we can assume there's more left
-                    // Adjust currentContent and currentBlock, and download the next page
-                    if (content.length >= 10000) {
-                        download(urls, transfers, transactions, currentUrlIdx, updatedContent);
+                        console.log('Max rate limit reached, retrying this segment...');
+                        download(urls, transfers, transactions, currentUrlIdx, currentContent);
+
                     }
-                    // If it's less that 10000 records, that's the last page of the dataset
-                    // Store what we have so far in updatedTransfers and updatedTransactions
-                    // and then move the URL index to the next one
                     else {
-                        const updatedTransfers    = dataSet == 'tokennfttx' ? transfers.concat(updatedContent)    : transfers;
-                        const updatedTransactions = dataSet == 'txlist'     ? transactions.concat(updatedContent) : transactions;
-                        download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1);
+
+                        console.log(updatedContent.length + ' records retrieved from [' + currentUrlIdx + '] \'' + dataSet + '\'' );
+
+                        // If we receive 10000 records, we can assume there's more left
+                        // Adjust currentContent and currentBlock, and download the next page
+                        if (content.length >= 10000) {
+                            download(urls, transfers, transactions, currentUrlIdx, updatedContent);
+                        }
+                        // If it's less that 10000 records, that's the last page of the dataset
+                        // Store what we have so far in updatedTransfers and updatedTransactions
+                        // and then move the URL index to the next one
+                        else {
+                            const updatedTransfers    = dataSet == 'tokennfttx' ? transfers.concat(updatedContent)    : transfers;
+                            const updatedTransactions = dataSet == 'txlist'     ? transactions.concat(updatedContent) : transactions;
+                            download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1);
+                        }
                     }
                 });
         });
-    }
-    else {
-        // All downloads done; proceed to process
-        process(transfers, transactions);
     }
 }
 
