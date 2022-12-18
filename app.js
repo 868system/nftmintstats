@@ -97,17 +97,18 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
                 .on('end', () => {
 
                     const content        = JSON.parse(chunks.join(''))['result'];
-                    const updatedContent = currentContent.concat(content);
 
                     // This deals with the API rate limit message
-                    if (content == 'Max rate limit reached, please use API Key for higher rate limit') {
+                    if (content == 'Max rate limit reached, please use API Key for higher rate limit' || content === null) {
 
-                        console.log('Max rate limit reached, retrying this segment...');
+                        console.log(content);
+                        console.log('Retrying this segment...');
                         download(urls, transfers, transactions, currentUrlIdx, currentContent);
 
                     }
                     else {
 
+                        const updatedContent = currentContent.concat(content);
                         console.log(updatedContent.length + ' records retrieved from [' + currentUrlIdx + '] \'' + dataSet + '\'' );
 
                         // If we receive 10000 records, we can assume there's more left
