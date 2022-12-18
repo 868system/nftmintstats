@@ -155,10 +155,10 @@ const process = (allTransfers, allTransactions) => {
         // If the transaction record was not found, it was ran using another
         // contract, like a proxy or wrapper. Notify the user, and error out
         if (thisTransaction === undefined) {
-            throw new Error('The contract used in transaction: ' + thisTransfer['hash'] + ' needs to be added to projects.js');
+            console.log('Contract not found for transaction: ' + thisTransfer['hash']);
         }
 
-        const thisTokenData = {
+        const thisTokenData = (thisTransaction === undefined) ? null : {
             // common fields, same values
             'blockNumber'       : thisTransfer['blockNumber'],
             'timeStamp'         : thisTransfer['timeStamp'],
@@ -202,6 +202,10 @@ const process = (allTransfers, allTransactions) => {
         return thisTokenData;
 
     });
+    if (tokenData.find(x => x === null) !== undefined) {
+        throw new Error('The contracts used in the transactions above need to be added to projects.js');
+    }
+
 
 
     //-------------------------
@@ -209,7 +213,6 @@ const process = (allTransfers, allTransactions) => {
     //
 
     const uniqueTransactions = tokenData.map((tokenDataItem, tokenDataIndex) => [tokenDataIndex, tokenDataItem['hash']]).filter((x, i, a) => a.findIndex(y => y[1] == x[1]) == i);
-
 
     const transactionData = uniqueTransactions.map(tx => {
 

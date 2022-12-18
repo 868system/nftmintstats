@@ -51,7 +51,14 @@ const projects = {
     // Cool Cats
     'cool'              : {contractAddresses: [ '0x1A92f7381B9F03921564a437210bB9396471050C'    ]},
 
+    // Bored Ape Kennel Club
+    'bakc'              : {contractAddresses: [ '0xba30E5F9Bb24caa003E9f2f0497Ad287FDF95623',
+                                                '0xf64a03c45ef0d127d4766fe96ac421fc98d78f79',
+                                                '0xb88f61e6fbda83fbfffabe364112137480398018'    ]},
 
+    // Decentraland
+    'land'              : {contractAddresses: [ '0xF87E31492Faf9A91B02Ee0dEAAd50d51d56D5d4d',
+                                                '0x54b7a124b44054da3692dbc56b116a35c6a3e561'    ]},
 
     'pxn': {
 
