@@ -131,8 +131,11 @@ const process = (allTransfers, allTransactions) => {
     // how we download from Etherscan. We filter them out here
     const uniqueMints = allTransfers.filter((x, i, a) => a.findIndex((y) => y['tokenID'] == x['tokenID']) == i);
 
-    // Construct an object containing mint information per token
-    // Use data from both transfers and transactions
+
+    //-------------------------
+    // Mint information keyed by token ID
+    //
+
     const tokenData = uniqueMints.map(thisTransfer => {
 
         // Look for the record in the transactions object with the
@@ -146,7 +149,7 @@ const process = (allTransfers, allTransactions) => {
         }
 
         const thisTokenData = {
-            // common
+            // common fields, same values
             'blockNumber'       : thisTransfer['blockNumber'],
             'timeStamp'         : thisTransfer['timeStamp'],
             'hash'              : thisTransfer['hash'],
@@ -171,13 +174,13 @@ const process = (allTransfers, allTransactions) => {
             'methodId'          : thisTransaction['methodId'],
             'functionName'      : thisTransaction['functionName'],
 
-            // mints (collisions)
+            // mints (common fields, different values)
             // 'from'
             // 'input'
             'to'                : thisTransfer['to'],
             'contractAddress'   : thisTransfer['contractAddress'],
 
-            // transactions (collisions)
+            // transactions (common fields, different values)
             // 'from'
             // 'to'
             // 'contractAddress'
@@ -190,15 +193,15 @@ const process = (allTransfers, allTransactions) => {
 
     });
 
-    const uniqueMintTransactions = tokenData.map((tokenMint, tokenMintIdx) => [tokenMintIdx, tokenMint['hash']]).filter((x, i, a) => a.findIndex(y => y[1] == x[1]) == i);
+
+    //-------------------------
+    // Mint information keyed by transaction hash
+    //
+
+    const uniqueTransactions = tokenData.map((tokenDataItem, tokenDataIndex) => [tokenDataIndex, tokenDataItem['hash']]).filter((x, i, a) => a.findIndex(y => y[1] == x[1]) == i);
 
 
-
-    // console.log(uniqueMintTransactions.length + ' unique mint transactions');
-    // console.log('mint functions:');
-    // console.log(uniqueFunctions);
-
-    const mintTransactions = uniqueMintTransactions.map(tx => {
+    const transactionData = uniqueTransactions.map(tx => {
 
         // common
         const blockNumber       = tokenData[tx[0]]['blockNumber'];
@@ -227,14 +230,16 @@ const process = (allTransfers, allTransactions) => {
         const functionSignature = tokenData[tx[0]]['functionName'];
 
         // derived
-        const functionName = functionSignature.split('(')[0];
+        const functionName  = functionSignature.split('(')[0];
+        const tokenIDs      = tokenData.reduce((acc, val) => val['hash'] == tx[1] ?
+                                acc.concat(val['tokenID']) : acc, []);
 
-        const tokenIDs = tokenData.reduce((acc, val) => val['hash'] == tx[1] ? acc.concat(val['tokenID']) : acc, []);
-        const tokenIDsString = tokenIDs.join(' ');
-        const tokenCount = tokenIDs.length;
+        const tokenIDsString    = tokenIDs.join(' ');
+        const tokenCount        = tokenIDs.length;
 
-        const isoDate = new Date(parseInt(timeStamp) * 1000);
-        const date = isoDate.toLocaleDateString('en-us', { year: 'numeric', month: 'numeric', day: 'numeric'});
+        const isoDate   = new Date(parseInt(timeStamp) * 1000);
+        const date      = isoDate.toLocaleDateString('en-us',
+                            { year: 'numeric', month: 'numeric', day: 'numeric'});
 
         const priceETHUSD   = getEthPrice(isoDate);
         const valueETH      = parseFloat(value) / 1000000000000000000.0;
@@ -244,7 +249,7 @@ const process = (allTransfers, allTransactions) => {
         const gasUsedETH    = parseFloat(gasUsed) * parseFloat(gasPrice) / 1000000000000000000.0;
         const gasUsedUSD    = gasUsedETH * priceETHUSD;
 
-        const mintTransaction = {
+        const thisTransactionData = {
 
             // transaction
             'transactionHash'   : hash,
@@ -288,59 +293,35 @@ const process = (allTransfers, allTransactions) => {
 
         };
 
-        return mintTransaction;
+        return thisTransactionData;
     });
 
-    const mintItems = mintTransactions.reduce((result, transaction) => {
+    // Write per-token data to CSV
+    const tokenDataOut = transactionData.reduce((result, transaction) => {
 
-        // duplicate the transaction's entry for each token ID it minted
-        const expansion = transaction['txTokenIDs'].split(' ').reduce((acc, id) => {
-
-            return acc.concat([{['tokenID']: id, ...transaction}]);
-
-        }, []);
+        // Duplicate the transaction's entry for each token ID it minted
+        const expansion = transaction['txTokenIDs'].split(' ').reduce((rows, id) =>
+            rows.concat([{['tokenID']: id, ...transaction}]), []);
 
         return result.concat(expansion);
-
     }, []);
 
-
-
-
-
-    const mintItemsCSV = mintItems.reduce((acc, txn) =>
+    const tokenDataCsv = tokenDataOut.reduce((acc, txn) =>
         acc.concat([Object.values(txn).map(x => '"' + x + '"').join(',')]),
-        [Object.keys(mintItems[0]).map(x => '"' + x + '"').join(',')]);
+        [Object.keys(tokenDataOut[0]).map(x => '"' + x + '"').join(',')]);
 
-    writeFile('data/' + projectName + '_tokens.csv', mintItemsCSV.join('\n'), showError);
-
-
-    const uniqueFunctionsRaw = mintTransactions.map(txn => [txn['methodId'], txn['functionName']]).filter((x, i, a) => a.findIndex(y => y[0] == x[0]) == i);
+    writeFile('data/' + projectName + '_tokens.csv', tokenDataCsv.join('\n'), showError);
 
 
+    //-------------------------
+    // Aggregate mint information keyed by calling function
+    //
 
+    const methodIdMap = transactionData.map(txn => [txn['methodId'], txn['functionName']]).filter((x, i, a) => a.findIndex(y => y[0] == x[0]) == i);
 
-
-    const itemsTotal = mintItems.length;
-
-    const [ethTotal, usdTotal] =
-        mintItems.reduce((acc, item) =>
-        [
-            parseFloat(acc[0]) + item['tokenValueETH'],
-            parseFloat(acc[1]) + item['tokenValueUSD'],
-        ],
-        [0.0, 0.0]);
-
-    //console.log([itemsTotal, ethTotal, usdTotal]);
-
-    const functionStats = uniqueFunctionsRaw.map(x => {
+    const functionData = methodIdMap.map(x => {
 
         const [methodId, functionName] = x;
-
-
-        // 'priceETHUSD'       : Math.round(priceETHUSD * 100.0) / 100.0,
-        // 'totalValue'        : Math.round(valueETH * 100000000.0) / 100000000.0,
-
 
         const [
             itemsPerFunction,
@@ -349,7 +330,7 @@ const process = (allTransfers, allTransactions) => {
             totalGasETH,
             totalGasUSD
         ] =
-            mintItems.reduce((acc, item) =>
+        tokenDataOut.reduce((acc, item) =>
             item['methodId'] == methodId ? [
                 parseInt(acc[0]) + 1,
                 parseFloat(acc[1]) + Math.round(item['tokenValueETH'] * 100000000.0) / 100000000.0,
@@ -382,33 +363,13 @@ const process = (allTransfers, allTransactions) => {
 
     });
 
-
-    const functionsCSV = functionStats.reduce((acc, txn) =>
+    const functionDataCsv = functionData.reduce((acc, txn) =>
         acc.concat([Object.values(txn).map(x => '"' + x + '"').join(',')]),
-        [Object.keys(functionStats[0]).map(x => '"' + x + '"').join(',')]);
+        [Object.keys(functionData[0]).map(x => '"' + x + '"').join(',')]);
 
-    writeFile('data/' + projectName + '_functions.csv', functionsCSV.join('\n'), showError);
-    //console.log(functionStats);
+    writeFile('data/' + projectName + '_functions.csv', functionDataCsv.join('\n'), showError);
 
-
-    console.log();
-
-
-
-
-
-
-
-
-
-    // writeFile('data/' + projectName + '_mints_ids.json', JSON.stringify(mintItems), showError);
-    // writeFile('data/' + projectName + '_mints_tx.json', JSON.stringify(mintTransactions), showError);
-    // writeFile('data/' + projectName + '_mints.json', JSON.stringify(tokenData), showError);
-    // writeFile('data/' + projectName + '_transfers.json', JSON.stringify(uniqueTokenTransfers), showError);
 }
-
-
-
 
 
 //-----------------------------
@@ -416,3 +377,5 @@ const process = (allTransfers, allTransactions) => {
 //-----------------------------
 const start = () => download(urls);
 start();
+
+console.log();
