@@ -18,7 +18,7 @@ const showError = (err) => {
 // Ethereum historical prices
 //-----------------------------
 
-const ethPricesRaw  = readFileSync('data/eth_usd.csv', 'utf-8');
+const ethPricesRaw  = readFileSync('data/_eth_usd_.csv', 'utf-8');
 const ethPricesRows = ethPricesRaw.split(/\r\n|\n\r|\n|\r/).filter((x,i) => i>0 && x.length>0);
 
 const ethPrices = ethPricesRows.reduce((result, row) => {
@@ -28,7 +28,7 @@ const ethPrices = ethPricesRows.reduce((result, row) => {
     const month    = dateYMD[1] - 1; // January is 0
     const day      = dateYMD[2];
 
-    const date  = new Date(year, month, day);
+    const date  = new Date(Date.UTC(year, month, day));
     const price = rowItems[5];
     return ({...result, [date]: parseFloat(price)})
 
@@ -39,7 +39,7 @@ const getEthPrice = (date) => {
     const month = date.getUTCMonth();
     const day   = date.getUTCDate();
 
-    return ethPrices[new Date(year, month, day)];
+    return ethPrices[new Date(Date.UTC(year, month, day))];
 };
 
 
@@ -85,7 +85,7 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
                                 Math.max(...currentContent.map(x => x['blockNumber']));
 
         // Etherscan free tier API is restricted to 1 request per 5 seconds
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 6000));
 
         get(url + currentBlock, (response) => {
             const chunks = [];
@@ -237,13 +237,15 @@ const process = (allTransfers, allTransactions) => {
         const tokenIDsString    = tokenIDs.join(' ');
         const tokenCount        = tokenIDs.length;
 
-        const isoDate   = new Date(parseInt(timeStamp) * 1000);
-        const date      = isoDate.toLocaleDateString('en-us',
-                            { year: 'numeric', month: 'numeric', day: 'numeric'});
+        const date      = new Date(parseInt(timeStamp) * 1000);
+        const longDate  = date.toUTCString().replace('GMT', 'UTC');
+        const shortDate = date.toLocaleDateString('en-us',
+                            { year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC', timeZoneName: 'short'});
 
-        const priceETHUSD   = getEthPrice(isoDate);
+        const priceETHUSD   = getEthPrice(date);
         const valueETH      = parseFloat(value) / 1000000000000000000.0;
         const tokenValueETH = valueETH / tokenCount;
+
         const tokenValueUSD = tokenValueETH * priceETHUSD;
 
         const gasUsedETH    = parseFloat(gasUsed) * parseFloat(gasPrice) / 1000000000000000000.0;
@@ -255,7 +257,7 @@ const process = (allTransfers, allTransactions) => {
             'transactionHash'   : hash,
             'minterAddress'     : to,
             'functionName'      : functionName,
-            'date'              : date,
+            'shortDate'         : shortDate,
 
             // costs
             'priceETHUSD'       : Math.round(priceETHUSD * 100.0) / 100.0,
@@ -287,7 +289,7 @@ const process = (allTransfers, allTransactions) => {
             'isError'           : isError,
             'txReceiptStatus'   : txreceipt_status,
             'timeStamp'         : timeStamp,
-            'isoDate'           : isoDate,
+            'longDate'          : longDate,
             'txTokenCount'      : tokenCount,
             'txTokenIDs'        : tokenIDsString
 
