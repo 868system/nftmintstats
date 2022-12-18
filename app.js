@@ -310,7 +310,7 @@ const process = (allTransfers, allTransactions) => {
         acc.concat([Object.values(txn).map(x => '"' + x + '"').join(',')]),
         [Object.keys(tokenDataOut[0]).map(x => '"' + x + '"').join(',')]);
 
-    writeFile('data/' + projectName + '_tokens.csv', tokenDataCsv.join('\n'), showError);
+    writeFile('data/' + projectName + '_tokens.csv', tokenDataCsv.join('\n') + '\n', showError);
 
 
     //-------------------------
@@ -367,7 +367,7 @@ const process = (allTransfers, allTransactions) => {
         acc.concat([Object.values(txn).map(x => '"' + x + '"').join(',')]),
         [Object.keys(functionData[0]).map(x => '"' + x + '"').join(',')]);
 
-    writeFile('data/' + projectName + '_functions.csv', functionDataCsv.join('\n'), showError);
+    writeFile('data/' + projectName + '_functions.csv', functionDataCsv.join('\n') + '\n', showError);
 
 }
 
