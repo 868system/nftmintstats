@@ -1,6 +1,6 @@
 "use strict";
 
-import { get          } from 'https';
+//import { get          } from 'https';
 import { argv         } from 'process';
 import { writeFile,
          readFileSync } from 'fs';
@@ -13,6 +13,7 @@ const project = projects[projectName];
 const showError = (err) => {
     if (err) console.log(err);
 }
+
 
 //-----------------------------
 // Ethereum historical prices
@@ -46,6 +47,12 @@ const getEthPrice = (date) => {
 //-----------------------------
 // Download
 //-----------------------------
+
+// A very simple, synchronous style wrapper around the Fetch API
+const urlDL = async (url) => {
+    const response = await fetch(url);
+    return response.json();
+}
 
 //
 // https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc721-token-transfer-events-by-address
@@ -90,13 +97,21 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
         // Etherscan free tier API is restricted to 1 request per 5 seconds
         await new Promise(resolve => setTimeout(resolve, 5000));
 
-        get(url + currentBlock, (response) => {
-            const chunks = [];
-            response
-                .on('data', (chunk) => chunks.push(chunk))
-                .on('end', () => {
+        const content = (await urlDL(url + currentBlock))['result'];
 
-                    const content        = JSON.parse(chunks.join(''))['result'];
+
+
+
+
+
+
+        // get(url + currentBlock, (response) => {
+        //     const chunks = [];
+        //     response
+        //         .on('data', (chunk) => chunks.push(chunk))
+        //         .on('end', () => {
+
+        //             const content        = JSON.parse(chunks.join(''))['result'];
 
                     // This deals with the API rate limit message
                     if (content == 'Max rate limit reached, please use API Key for higher rate limit' || content === null) {
@@ -125,8 +140,8 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
                             download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1);
                         }
                     }
-                });
-        });
+    //             });
+    //    });
     }
 }
 
@@ -155,7 +170,7 @@ const process = (allTransfers, allTransactions) => {
         // If the transaction record was not found, it was ran using another
         // contract, like a proxy or wrapper. Notify the user, and error out
         if (thisTransaction === undefined) {
-            console.log('Contract not found for transaction: ' + thisTransfer['hash']);
+            console.log(thisTransfer['hash']);
         }
 
         const thisTokenData = (thisTransaction === undefined) ? null : {
@@ -205,7 +220,6 @@ const process = (allTransfers, allTransactions) => {
     if (tokenData.find(x => x === null) !== undefined) {
         throw new Error('The contracts used in the transactions above need to be added to projects.js');
     }
-
 
 
     //-------------------------

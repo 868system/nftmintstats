@@ -11,4 +11,4 @@ wget 'https://query1.finance.yahoo.com/v7/finance/download/ETH-USD?period1=0&per
     --quiet \
     --output-document='data/_eth_usd_.csv'
 
-node ./app.js $1
+node --no-warnings ./app.js $1
