@@ -70,11 +70,7 @@ const txlistUrl     = 'https://api.etherscan.io/api?module=account&action=txlist
 const urls  = [tokennfttxUrl + project.contractAddresses[0] + '&startblock=']
             .concat(project.contractAddresses.map(x => txlistUrl + x + '&startblock='))
 
-const download = async (urls, _transfers, _transactions, _currentUrlIdx, _currentContent) => {
-
-    const currentUrlIdx = _currentUrlIdx !== undefined ? _currentUrlIdx : 0;
-    const transfers     = _transfers     !== undefined ? _transfers     : [];
-    const transactions  = _transactions  !== undefined ? _transactions  : [];
+const download = async (urls, transfers = [], transactions = [], currentUrlIdx = 0, currentContent = []) => {
 
     if (currentUrlIdx >= urls.length) {
         // All downloads done; proceed to process
@@ -89,7 +85,6 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
 
         // Each request only returns 10000 records, so we need to fetch several times
         // for the same dataset. currentContent and currentBlock keeps track.
-        const currentContent = _currentContent !== undefined ? _currentContent : [];
         const currentBlock   = currentContent.length == 0 ? 0 :
                                 Math.max(...currentContent.map(x => x['blockNumber']));
 
