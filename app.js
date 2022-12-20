@@ -1,6 +1,5 @@
 "use strict";
 
-//import { get          } from 'https';
 import { argv         } from 'process';
 import { writeFile,
          readFileSync } from 'fs';
@@ -99,49 +98,33 @@ const download = async (urls, _transfers, _transactions, _currentUrlIdx, _curren
 
         const content = (await urlDL(url + currentBlock))['result'];
 
+        // This deals with the API rate limit message
+        if (content == 'Max rate limit reached, please use API Key for higher rate limit' || content === null) {
 
+            console.log(content);
+            console.log('Retrying this segment...');
+            download(urls, transfers, transactions, currentUrlIdx, currentContent);
 
+        }
+        else {
 
+            const updatedContent = currentContent.concat(content);
+            console.log(updatedContent.length + ' records retrieved from [' + currentUrlIdx + '] \'' + dataSet + '\'' );
 
-
-
-        // get(url + currentBlock, (response) => {
-        //     const chunks = [];
-        //     response
-        //         .on('data', (chunk) => chunks.push(chunk))
-        //         .on('end', () => {
-
-        //             const content        = JSON.parse(chunks.join(''))['result'];
-
-                    // This deals with the API rate limit message
-                    if (content == 'Max rate limit reached, please use API Key for higher rate limit' || content === null) {
-
-                        console.log(content);
-                        console.log('Retrying this segment...');
-                        download(urls, transfers, transactions, currentUrlIdx, currentContent);
-
-                    }
-                    else {
-
-                        const updatedContent = currentContent.concat(content);
-                        console.log(updatedContent.length + ' records retrieved from [' + currentUrlIdx + '] \'' + dataSet + '\'' );
-
-                        // If we receive 10000 records, we can assume there's more left
-                        // Adjust currentContent and currentBlock, and download the next page
-                        if (content.length >= 10000) {
-                            download(urls, transfers, transactions, currentUrlIdx, updatedContent);
-                        }
-                        // If it's less that 10000 records, that's the last page of the dataset
-                        // Store what we have so far in updatedTransfers and updatedTransactions
-                        // and then move the URL index to the next one
-                        else {
-                            const updatedTransfers    = dataSet == 'tokennfttx' ? transfers.concat(updatedContent)    : transfers;
-                            const updatedTransactions = dataSet == 'txlist'     ? transactions.concat(updatedContent) : transactions;
-                            download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1);
-                        }
-                    }
-    //             });
-    //    });
+            // If we receive 10000 records, we can assume there's more left
+            // Adjust currentContent and currentBlock, and download the next page
+            if (content.length >= 10000) {
+                download(urls, transfers, transactions, currentUrlIdx, updatedContent);
+            }
+            // If it's less that 10000 records, that's the last page of the dataset
+            // Store what we have so far in updatedTransfers and updatedTransactions
+            // and then move the URL index to the next one
+            else {
+                const updatedTransfers    = dataSet == 'tokennfttx' ? transfers.concat(updatedContent)    : transfers;
+                const updatedTransactions = dataSet == 'txlist'     ? transactions.concat(updatedContent) : transactions;
+                download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1);
+            }
+        }
     }
 }
 
