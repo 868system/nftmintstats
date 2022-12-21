@@ -68,13 +68,13 @@ const tokennfttxUrl = 'https://api.etherscan.io/api?module=account&action=tokenn
 const txlistUrl     = 'https://api.etherscan.io/api?module=account&action=txlist&address=';
 
 const urls  = [tokennfttxUrl + project.contractAddresses[0] + '&startblock=']
-            .concat(project.contractAddresses.map(x => txlistUrl + x + '&startblock='))
+            .concat(project.contractAddresses.map(x => txlistUrl + x + '&startblock='));
 
 const download = async (urls, transfers = [], transactions = [], currentUrlIdx = 0, currentContent = []) => {
 
     if (currentUrlIdx >= urls.length) {
         // All downloads done; proceed to process
-        process(transfers, transactions);
+        return [transfers, transactions];
     }
     else {
         // Process each URL in the array
@@ -98,7 +98,7 @@ const download = async (urls, transfers = [], transactions = [], currentUrlIdx =
 
             console.log(content);
             console.log('Retrying this segment...');
-            download(urls, transfers, transactions, currentUrlIdx, currentContent);
+            return(() => download(urls, transfers, transactions, currentUrlIdx, currentContent));
 
         }
         else {
@@ -109,7 +109,7 @@ const download = async (urls, transfers = [], transactions = [], currentUrlIdx =
             // If we receive 10000 records, we can assume there's more left
             // Adjust currentContent and currentBlock, and download the next page
             if (content.length >= 10000) {
-                download(urls, transfers, transactions, currentUrlIdx, updatedContent);
+                return(() => download(urls, transfers, transactions, currentUrlIdx, updatedContent));
             }
             // If it's less that 10000 records, that's the last page of the dataset
             // Store what we have so far in updatedTransfers and updatedTransactions
@@ -117,7 +117,7 @@ const download = async (urls, transfers = [], transactions = [], currentUrlIdx =
             else {
                 const updatedTransfers    = dataSet == 'tokennfttx' ? transfers.concat(updatedContent)    : transfers;
                 const updatedTransactions = dataSet == 'txlist'     ? transactions.concat(updatedContent) : transactions;
-                download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1);
+                return(() => download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1));
             }
         }
     }
@@ -380,9 +380,37 @@ const process = (allTransfers, allTransactions) => {
 
 
 //-----------------------------
+// 'Trampoline' recursion unwrapper
+//-----------------------------
+//
+// A simple implementation of the trampoline pattern,
+// to be used for the recursive style downloader
+//
+// Tip: wrap the function you want to recurse in an anonymous function
+//
+const trampoline = async arg => {
+
+    let currentResult = arg;
+
+    while (typeof currentResult === 'function') {
+        currentResult = await currentResult();
+    }
+    
+    return currentResult;
+
+}
+
+
+//-----------------------------
 // Start the program
 //-----------------------------
-const start = () => download(urls);
-start();
+
+const start = async () => {
+
+    const dataSets = await trampoline(() => download(urls));
+    process(dataSets[0], dataSets[1])
+
+};
+await start();
 
 console.log();
