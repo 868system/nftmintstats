@@ -16,8 +16,73 @@ const projects = {
                                                 '0xdbfd76af2157dc15ee4e57f3f942bb45ba84af24'    ]},
 
     // Otherdeed for Otherside
-    // RangeError: Maximum call stack size exceeded
-    // 'othr'              : {contractAddresses: [ '0x34d85c9CDeB23FA97cb08333b511ac86E1C4E258'    ]},
+    'othr': {contractAddresses: [
+        '0x34d85c9CDeB23FA97cb08333b511ac86E1C4E258',
+        '0x1633b453c3ca5a244c66f4418ff5120282370053',
+        '0xbb67d2ab6251a6bd5276759cb431088c5487a3b2',
+        '0xa4e2dda8fb721f0a2855fe43f9ab361ed26d994a',
+        '0xfd4838e0bd3955ffa902cb0e6ffa93704f863232',
+        '0x580a96bc816c2324bdff5eb2a7e159ae7ee63022',
+        '0x424929525a9f36897cdd3235023c13a2ea7d7218',
+        '0x98e711f31e49c2e50c1a290b6f2b1e493e43ea76',
+        '0xd38a87d7b690323ef6883e887614502abcf9b1eb',
+        '0xa9d93a5cca9c98512c8c56547866b1db09090326',
+        '0x6b4df334368b09f87b3722449703060eef284126',
+        '0xdbfd76af2157dc15ee4e57f3f942bb45ba84af24',
+        '0xb88f61e6fbda83fbfffabe364112137480398018',
+        '0xfb47b2ca7df248d36cf0e4f63bfd0503c25debd4',
+        '0x69f37e419bd1457d2a25ed3f5d418169caae8d1f',
+        '0xb25a1d02b029d53212e4c356b6daad419762e606',
+        '0x8fbacd6ba681c6fa80b35c11c69a7c881a08d802',
+        '0xf2018871debce291588b4034dbf6b08dfb0ee0dc',
+        '0x5e4210e05368394e0820847c92b424bf37a0a5e8',
+        '0xe4fff04ffef71660762d3f2f9d78190be4753a2d',
+        '0x4b4d75b8b0fc7528ea2614b2ca83555824c07867',
+        '0x0184670b561ce2a85c97b11b06116c2b0a044663',
+        '0xa514b4552e4c78e08ac40dcb4ed09b84d6612253',
+        '0xfc39944103bdb1d20f60dcc333143247cdf26b38',
+        '0x6809e56d369fd74aa4fc738d3cfdaff8af7f749a',
+        '0x8799198df84e5dd8d788adbb3e986a222e3dd714',
+        '0xc2d1c329655e75f02ef885b2a686773c7b2ce1d3',
+        '0x9661654d8d0e68bcbb8fe05c971f818b6cab933a',
+        '0x7c866452ef99f82e900dd3d35f0ad1f1e3e10b11',
+        '0xd38ae6e4d4c8f788f78e96665ef5343a286261fe',
+        '0x0dd46d3cab80d4eec9298fbae9cc6c27edd969c0',
+        '0xae40c54ee5af654dfb82700cf1c64907f4d07282',
+        '0x15cecfe37d482f3afe58c9cf0cc2702833fdc89e',
+        '0x2f61cd8f256ef199ce0cd3094bdce77f1b7e91f5',
+        '0x4042071adc0fcf3743ef63562ae0aabdea9de6c4',
+        '0x0dd46d3cab80d4eec9298fbae9cc6c27edd969c0',
+        '0x4f3a120e72c76c22ae802d129f599bfdbc31cb81',
+        '0x30904e1ef9866eb32d5b440ed750e848d770b9de',
+        '0xe34346b4e9ca23ff1edfb4f3a8fb8a5875479e4e',
+        '0xaea5deb68526cfbb37d9c8b01a849e49ed1f305a',
+        '0x6a693a682f8cfea669c3170814d875107cb3accb',
+        '0xd004b704f6400229d7d593eca5190554cc0b4170',
+        '0x9d58779365b067d5d3fcc6e92d237acd06f1e6a1',
+        '0x5f364c31e2ad2c3a9fc215aa075189a78d17d569',
+        '0x2d92d697000b2f65e9ce889b7b61010b34b08249',
+        '0x0b30da447c22244ce72c6bdec1a31f0d9ac1e147',
+        '0x6e5204cae059617dba634e3531bbcaa529e8e324',
+        '0x7a75e85d6d3f0b6d7363a5d7f23adc25101131e7',
+        '0x49bcff7dd2ddea99bdfc4ef3565968fc43cf57f3',
+        '0x49bcff7dd2ddea99bdfc4ef3565968fc43cf57f3',
+        '0x8e68e9d99f027cfdff2c46ab10988d2739f06c77',
+        '0x281f78188f494260edea1718bfb0eaceb0f7e79e',
+        '0x30d20c96dfb5b4d529496177e744f14913a42ea3',
+        '0x229b0bf832bad617683d45ab4b530887cbebbe88',
+        '0x2518517745d3526b77b61fc9168c544ea6eb0bf0',
+        '0x381e8182d07c6c32f5e79fbdd540146f54d3c8f9',
+        '0x4d62360cecf722a7888b1f97d4c7e8b170071248',
+        '0x88009e27937b01b326d820512add10f8a4007ec6',
+        '0xa764c8ebb831e5e6bd35aecc9afb0d509e6bfdfc',
+        '0xaec5f0d463fe18c9380115dea6caddbc0ea69648',
+        '0xbb3a50e789ee4baa26a777a4a3d2ed60345977d9',
+        '0xd028cfafb97c6eea2a1726b082c8f15cde87c3ee',
+        '0xe6683e6aae795a8b71015d955ce0248d684dc2e3',
+        '0xe7604c000011444793e7021b41448f0753972719',
+        '0xf188839e7b63854f78dbbc1e683659a6d457dffa'
+    ]},
 
     // Azuki
     'azuki'             : {contractAddresses: [ '0xED5AF388653567Af2F388E6224dC7C4b3241C544'    ]},
@@ -73,10 +138,9 @@ const projects = {
     'invsble'           : {contractAddresses: [ '0x59468516a8259058baD1cA5F8f4BFF190d30E066'    ]},
 
     // Rektguy
-    // RangeError: Maximum call stack size exceeded
-    // 'rektguy'           : {contractAddresses: [ '0xB852c6b5892256C264Cc2C888eA462189154D8d7',
-    //                                             '0x9ecab5e0f33176f75d6ff3ee004eaf6474e7b4bc',
-    //                                             '0x9d58779365b067d5d3fcc6e92d237acd06f1e6a1'    ]},
+    'rektguy'           : {contractAddresses: [ '0xB852c6b5892256C264Cc2C888eA462189154D8d7',
+                                                '0x9ecab5e0f33176f75d6ff3ee004eaf6474e7b4bc',
+                                                '0x9d58779365b067d5d3fcc6e92d237acd06f1e6a1'    ]},
 
     // Genuine Undead
     'gu'                : {contractAddresses: [ '0x209e639a0EC166Ac7a1A4bA41968fa967dB30221'    ]},
@@ -85,19 +149,20 @@ const projects = {
     'fluf'              : {contractAddresses: [ '0xCcc441ac31f02cD96C153DB6fd5Fe0a2F4e6A68d'    ]},
 
     // Beanz
-    // RangeError: Maximum call stack size exceeded
-    // 'beanz'             : {contractAddresses: [ '0x306b1ea3ecdf94aB739F1910bbda052Ed4A9f949',
-    //                                             '0x02f3ebd01e3b02019573a9c3b19e5db804cf640d',
-    //                                             '0x0bd30c34e4524df28d368d00c2feb534696d0bb7',
-    //                                             '0x281f78188f494260edea1718bfb0eaceb0f7e79e',
-    //                                             '0x312871bafc1c630be270829b5fb45626189505fd',
-    //                                             '0x8093c39d69b33ef7384f9bb03dff50113ef6466e',
-    //                                             '0x9d58779365b067d5d3fcc6e92d237acd06f1e6a1',
-    //                                             '0xa9f587b8c268201575556941addc2b671b59aa05',
-    //                                             '0xd01a46404e3af36a0936f48db312c5e6bb5b06d2',
-    //                                             '0xd38a87d7b690323ef6883e887614502abcf9b1eb',
-    //                                             '0xecd3054ab5552035276624bc94e2d7a147f3fc81',
-    //                                             '0xf7478497c8d6dd17db3e66cc956eac032498d5cf'    ]},
+    'beanz' : {contractAddresses: [
+        '0x306b1ea3ecdf94aB739F1910bbda052Ed4A9f949',
+        '0x02f3ebd01e3b02019573a9c3b19e5db804cf640d',
+        '0x0bd30c34e4524df28d368d00c2feb534696d0bb7',
+        '0x281f78188f494260edea1718bfb0eaceb0f7e79e',
+        '0x312871bafc1c630be270829b5fb45626189505fd',
+        '0x8093c39d69b33ef7384f9bb03dff50113ef6466e',
+        '0x9d58779365b067d5d3fcc6e92d237acd06f1e6a1',
+        '0xa9f587b8c268201575556941addc2b671b59aa05',
+        '0xd01a46404e3af36a0936f48db312c5e6bb5b06d2',
+        '0xd38a87d7b690323ef6883e887614502abcf9b1eb',
+        '0xecd3054ab5552035276624bc94e2d7a147f3fc81',
+        '0xf7478497c8d6dd17db3e66cc956eac032498d5cf'
+    ]},
 
     // mfers
     'mfer'              : {contractAddresses: [ '0x79fcdef22feed20eddacbb2587640e45491b757f'    ]},
@@ -149,12 +214,18 @@ const projects = {
     'oddities'          : {contractAddresses: [ '0x1792a96E5668ad7C167ab804a100ce42395Ce54D'    ]},
 
     // Murakami Flowers
-    // RangeError: Maximum call stack size exceeded
-    // 'mf'                : {contractAddresses: [ '0x7D8820FA92EB1584636f4F5b8515B5476B75171a',
-    //                                             '0xb88f61e6fbda83fbfffabe364112137480398018',
-    //                                             '0xa9a70e66830bcf9776c23fb1df708d7ad498e6e6',
-    //                                             '0x9ddbdcd3c5123e673e4b96992101f8ceafcd95a0',
-    //                                             '0x9d58779365b067d5d3fcc6e92d237acd06f1e6a1'    ]},
+    'mf': {contractAddresses: [
+        '0x7D8820FA92EB1584636f4F5b8515B5476B75171a',
+        '0xb88f61e6fbda83fbfffabe364112137480398018',
+        '0xa9a70e66830bcf9776c23fb1df708d7ad498e6e6',
+        '0x9ddbdcd3c5123e673e4b96992101f8ceafcd95a0',
+        '0x9d58779365b067d5d3fcc6e92d237acd06f1e6a1',
+        '0xfb47b2ca7df248d36cf0e4f63bfd0503c25debd4',
+        '0x8fbacd6ba681c6fa80b35c11c69a7c881a08d802',
+        '0x0b30da447c22244ce72c6bdec1a31f0d9ac1e147',
+        '0xb90847d6d9a27ce4c2e4d0ad8ef4a88bce3b53c6',
+        '0x1933a5496398b51f596c0dba32dfc51805355f6b'
+    ]},
 
     // VeeFriends Series 2
     'vf2'               : {contractAddresses: [ '0x9378368ba6b85c1FbA5b131b530f5F5bEdf21A18'    ]},

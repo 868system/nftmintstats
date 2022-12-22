@@ -85,8 +85,9 @@ const download = async (urls, transfers = [], transactions = [], currentUrlIdx =
 
         // Each request only returns 10000 records, so we need to fetch several times
         // for the same dataset. currentContent and currentBlock keeps track.
-        const currentBlock   = currentContent.length == 0 ? 0 :
-                                Math.max(...currentContent.map(x => x['blockNumber']));
+        const currentBlock = currentContent.length == 0 ? 0 :
+                                currentContent.map(x => x['blockNumber'])
+                                            .reduce((a, x) => (x > a ? x : a), 0);
 
         // Etherscan free tier API is restricted to 1 request per 5 seconds
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -395,7 +396,7 @@ const trampoline = async arg => {
     while (typeof currentResult === 'function') {
         currentResult = await currentResult();
     }
-    
+
     return currentResult;
 
 }
