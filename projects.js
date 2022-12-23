@@ -364,6 +364,36 @@ const projects = {
         '0xb10f56fa353d99436ca9dc0b7f6a950232fd6ca9'
     ]},
 
+    // Valhalla
+    'val': {contractAddresses: [
+        '0x231d3559aa848bf10366fb9868590f01d34bf240',
+        '0xff59b4b3d52728f78020414c720164a17c08f499',
+        '0xff59b4b3d52728f78020414c720164a17c08f499',
+        '0xff59b4b3d52728f78020414c720164a17c08f499'
+    ]},
+
+    // KPR (original contract)
+    'kpr': {contractAddresses: [
+        '0x05da517B1bf9999B7762EaEfa8372341A1a47559'
+    ]},
+
+    // 1984 Redux
+    '1984': {contractAddresses: [
+        '0x662081d1df478Ba4acEdA637DcF1EF762E7A3a6e'
+    ]},
+
+    // Genki Genesis
+    'genki': {contractAddresses: [
+        '0x0ad2ec2304117DE6f7375652e4501c5E64ae960c',
+        '0x72ae08158b40cd88607ffc5b4138185d8c87e724'
+    ]},
+
+    // Oldeus
+    'oldeus': {contractAddresses: [
+        '0xaC3c15Fe919f146D48E2dAdDFAD0a3ec85D87934'
+    ]},
+
+
 }
 
 export { projects };
