@@ -296,11 +296,10 @@ const projects = {
         '0x9378368ba6b85c1FbA5b131b530f5F5bEdf21A18'
     ]},
 
-    // Gutter Cat Gang
-    // This is ERC1155... skip for now
-    // 'guttercat': {contractAddresses: [
-    //    '0xEdB61f74B0d09B2558F1eeb79B247c1F363Ae452'
-    // ]},
+    // Gutter Cat Gang (ERC 1155)
+    'guttercat': {contractAddresses: [
+       '0xEdB61f74B0d09B2558F1eeb79B247c1F363Ae452'
+    ]},
 
     // DeadFellaz
     'deadfellaz': {contractAddresses: [
