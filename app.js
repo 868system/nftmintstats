@@ -404,17 +404,15 @@ const process = (allTransfers, allTransactions) => {
 // A simple implementation of the trampoline pattern,
 // to be used for the recursive style downloader
 //
-// Tip: wrap the function you want to recurse in an anonymous function
-//
-const trampoline = async arg => {
+const trampoline = (fn) => async (...args) => {
 
-    let currentResult = arg;
+    let result = await fn(...args);
 
-    while (typeof currentResult === 'function') {
-        currentResult = await currentResult();
+    while (typeof result === 'function') {
+        result = await result();
     }
 
-    return currentResult;
+    return result;
 
 }
 
@@ -425,7 +423,7 @@ const trampoline = async arg => {
 
 const start = async () => {
 
-    const dataSets = await trampoline(() => download(urls));
+    const dataSets = await trampoline(download)(urls);
     process(dataSets[0], dataSets[1])
 
 };
