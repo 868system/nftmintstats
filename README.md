@@ -83,4 +83,8 @@ Make sure that the first entry in the array is the official token contract.
 
 ## limitations
 
-Currently, ERC 1155 support is preliminary and will likely result in wrong data if the collection has several editions per token ID.
+This utility only supports ERC 721 NFTs on the Ethereum network.
+
+~~Currently, ERC 1155 support is preliminary and will likely result in wrong data if the collection has several editions per token ID.~~
+
+ERC 1155 support is on hold, in favor of developing more urgent features.

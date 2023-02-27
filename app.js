@@ -61,13 +61,6 @@ const urlDL = async (url) => {
 const tokennfttxUrl = 'https://api.etherscan.io/api?module=account&action=tokennfttx&address=0x0000000000000000000000000000000000000000&contractaddress=';
 
 //
-// https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc1155-token-transfer-events-by-address
-//
-// tokennfttx: ERC1155 transfers that come from 0x0000000000000000000000000000000000000000 are mints
-//
-const token1155txUrl = 'https://api.etherscan.io/api?module=account&action=token1155tx&address=0x0000000000000000000000000000000000000000&contractaddress=';
-
-//
 // https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-normal-transactions-by-address
 //
 // txlist: If the address queried is a contract address, this returns all transactions under that contract
@@ -75,8 +68,7 @@ const token1155txUrl = 'https://api.etherscan.io/api?module=account&action=token
 const txlistUrl     = 'https://api.etherscan.io/api?module=account&action=txlist&address=';
 
 const urls  = [
-    tokennfttxUrl + project.contractAddresses[0] + '&startblock=',
-    token1155txUrl + project.contractAddresses[0] + '&startblock='
+    tokennfttxUrl + project.contractAddresses[0] + '&startblock='
 ].concat(project.contractAddresses.map(x => txlistUrl + x + '&startblock='));
 
 const download = async (urls, transfers = [], transactions = [], currentUrlIdx = 0, currentContent = []) => {
@@ -125,17 +117,10 @@ const download = async (urls, transfers = [], transactions = [], currentUrlIdx =
             // Store what we have so far in updatedTransfers and updatedTransactions
             // and then move the URL index to the next one
             else {
-                const updatedTransfers    = dataSet == 'tokennfttx' || dataSet == 'token1155tx' ? transfers.concat(updatedContent)    : transfers;
+                const updatedTransfers    = dataSet == 'tokennfttx' ? transfers.concat(updatedContent)    : transfers;
                 const updatedTransactions = dataSet == 'txlist'     ? transactions.concat(updatedContent) : transactions;
 
-                // if 'tokennfttx' contains data, don't try to download 'token1155tx' anymore
-                if (dataSet == 'tokennfttx' && updatedContent.length > 0) {
-                    console.log('0 records retrieved from [' + (currentUrlIdx + 1) + '] \'token1155tx\' (skipped)');
-                    return(() => download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 2));
-                }
-                else {
-                    return(() => download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1));
-                }
+                return(() => download(urls, updatedTransfers, updatedTransactions, currentUrlIdx + 1));
             }
         }
     }
